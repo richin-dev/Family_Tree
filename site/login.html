@@ -31,7 +31,7 @@ button.go:disabled{opacity:.55;cursor:wait}
     <button class="go" id="go" type="submit">Sign in</button>
     <div id="msg" role="alert" aria-live="polite"></div>
   </form>
-  <a class="back" href="/">← Back to the family tree</a>
+  <a class="back" href="./">← Back to the family tree</a>
   <div class="note">Accounts are created by the family admin — there is no sign-up. Ask them if you need access.</div>
 </main>
 <script>
@@ -40,7 +40,7 @@ $('eye').onclick=()=>{const s=$('p').type==='password';$('p').type=s?'text':'pas
 $('f').onsubmit=async e=>{e.preventDefault();$('go').disabled=true;$('msg').textContent='';
  try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({username:$('u').value,password:$('p').value})});
   const d=await r.json().catch(()=>({}));
-  if(r.ok){const n=new URLSearchParams(location.search).get('next');location.replace(n&&/^\/(?!\/)/.test(n)?n:'/');return}
+  if(r.ok){const n=new URLSearchParams(location.search).get('next');location.replace(n&&!n.startsWith('//')&&!n.includes(':')?n:'./');return}
   $('msg').textContent=d.error||'Sign-in failed.';$('p').value='';$('p').focus()}
  catch(x){$('msg').textContent='Network problem — check your connection.'}
  $('go').disabled=false};
