@@ -1,0 +1,9 @@
+{
+  "repo": "richin-dev/family-tree",
+  "admin": "richin-dev",
+  "users": {
+    "example-cousin": [
+      "05-rappai-rosa.json"
+    ]
+  }
+}
