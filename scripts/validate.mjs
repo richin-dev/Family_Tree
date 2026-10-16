@@ -19,6 +19,7 @@ if (!accessRaw || !metaRaw) { console.error('data/access.json or data/meta.json 
 const access = JSON.parse(accessRaw), baseMeta = JSON.parse(metaRaw);
 const admin = String(access.admin || '').toLowerCase();
 const isAdmin = author === admin;
+const photosAdminOnly = access.uploads === 'admin';
 const entry = Object.entries(access.users || {}).find(([u]) => u.toLowerCase() === author);
 const allowedFiles = new Set(isAdmin ? [] : (entry ? entry[1] : []));
 
@@ -38,7 +39,8 @@ for (const { s, p } of changes) {
     else if (!allowedFiles.has(b[1])) errs.push(`\`${p}\`: @${author} is not assigned to this family branch`);
     else changedBranches.push(b[1]);
   } else if (ph) {
-    if (s !== 'A') errs.push(`\`${p}\`: photos can be added but not changed or deleted`);
+    if (photosAdminOnly) errs.push(`\`${p}\`: only the admin may add or change photos right now`);
+    else if (s !== 'A') errs.push(`\`${p}\`: photos can be added but not changed or deleted`);
     else {
       const buf = show(head, p), sz = sizeOf(head, p);
       if (!buf || buf.length < 3 || buf[0] !== 0xff || buf[1] !== 0xd8 || buf[2] !== 0xff) errs.push(`\`${p}\`: not a JPEG image`);
@@ -48,6 +50,26 @@ for (const { s, p } of changes) {
   } else errs.push(`\`${p}\`: only the admin may change this file`);
 }
 if (!isAdmin && !allowedFiles.size && changes.length) errs.push(`@${author} has no branches assigned in \`data/access.json\``);
+
+// Photo ids on each person. A new person counts only when they arrive with a photo.
+function photoFieldsChanged(oldRoot, newRoot) {
+  const snap = (root) => {
+    const m = new Map();
+    const walk = (n) => {
+      if (!n || typeof n !== 'object') return;
+      if (typeof n.id === 'string') m.set(n.id, JSON.stringify(n.ph === undefined ? null : n.ph));
+      if (Array.isArray(n.kids)) n.kids.forEach(walk);
+    };
+    walk(root);
+    return m;
+  };
+  const A = snap(oldRoot), B = snap(newRoot);
+  for (const [id, v] of B) {
+    if (!A.has(id)) { const ph = JSON.parse(v); if (Array.isArray(ph) && ph.some(Boolean)) return true; }
+    else if (A.get(id) !== v) return true;
+  }
+  return false;
+}
 
 // ---- 2. validate content of every branch file as it will exist after merge -------
 const headMetaRaw = show(head, 'data/meta.json'), headMeta = headMetaRaw ? JSON.parse(headMetaRaw) : baseMeta;
@@ -65,6 +87,7 @@ for (const f of headMeta.files) {
     const oldRaw = show(base, `data/branches/${f}`);
     let oldObj = null; try { oldObj = oldRaw ? JSON.parse(oldRaw.toString('utf8')) : null; } catch {}
     if (!isAdmin && oldObj && (obj.id !== oldObj.id || JSON.stringify(obj.names) !== JSON.stringify(oldObj.names))) errs.push(`\`${f}\`: the branch title (grandparents' names) can only be changed by the admin`);
+    if (!isAdmin && photosAdminOnly && oldObj && photoFieldsChanged(oldObj, obj)) errs.push(`\`${f}\`: only the admin may change photos right now`);
     summaries.push({ f, title: (obj.names || []).join(' / '), lines: describe(oldObj, obj) });
   }
 }

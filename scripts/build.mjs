@@ -20,7 +20,8 @@ fs.writeFileSync('dist/data.json', JSON.stringify({ files: meta.files, tree }));
 // What anonymous visitors get: the same tree without phone numbers, addresses and blood groups.
 const strip = ({ tel, addr, bg, ...r }) => ({ ...r, kids: (r.kids || []).map(strip) });
 fs.writeFileSync('dist/data.public.json', JSON.stringify({ files: meta.files, tree: tree.map(strip) }));
-fs.writeFileSync('dist/access.json', JSON.stringify({ repo: access.repo, admin: access.admin, users: access.users }));
+const uploads = access.uploads === 'family' ? 'family' : 'admin';
+fs.writeFileSync('dist/access.json', JSON.stringify({ repo: access.repo, admin: access.admin, uploads, users: access.users }));
 const pagesBase = process.env.PAGES_BASE || '';
 function copyHtml(src, dest) {
   let html = fs.readFileSync(src, 'utf8');
