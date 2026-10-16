@@ -1,6 +1,7 @@
 {
   "repo": "richin-dev/Family_Tree",
   "admin": "richin-dev",
+  "uploads": "admin",
   "users": {
     "example-cousin": [
       "05-rappai-rosa.json"
