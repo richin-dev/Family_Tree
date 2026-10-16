@@ -21,8 +21,17 @@ fs.writeFileSync('dist/data.json', JSON.stringify({ files: meta.files, tree }));
 const strip = ({ tel, addr, bg, ...r }) => ({ ...r, kids: (r.kids || []).map(strip) });
 fs.writeFileSync('dist/data.public.json', JSON.stringify({ files: meta.files, tree: tree.map(strip) }));
 fs.writeFileSync('dist/access.json', JSON.stringify({ repo: access.repo, admin: access.admin, users: access.users }));
-fs.copyFileSync('site/index.html', 'dist/index.html');
-fs.copyFileSync('site/login.html', 'dist/login.html');
+const pagesBase = process.env.PAGES_BASE || '';
+function copyHtml(src, dest) {
+  let html = fs.readFileSync(src, 'utf8');
+  if (pagesBase && !html.includes('<base ')) {
+    html = html.replace('<head>', `<head><base href="${pagesBase}">`);
+  }
+  fs.writeFileSync(dest, html);
+}
+copyHtml('site/index.html', 'dist/index.html');
+copyHtml('site/login.html', 'dist/login.html');
+
 // Run the login Function on every request, including static files and photos.
 fs.writeFileSync('dist/_routes.json', JSON.stringify({ version: 1, include: ['/*'], exclude: [] }));
 for (const f of fs.readdirSync('data/photos')) if (f.endsWith('.jpg')) fs.copyFileSync(path.join('data/photos', f), path.join('dist/photos', f));
