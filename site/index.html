@@ -173,6 +173,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;back
 <div class="bar"><input id="q" type="search" placeholder="Search a name…"><button id="ea">Expand all</button><button id="ca">Collapse</button><button id="sz" title="Card size">Aa Size</button><button id="ed">✏️ Edit</button><button id="upl" style="display:none">Family photos: off</button><button id="ab" class="edo" style="display:none">+ Add to branch</button><button id="sub" style="display:none">📤 Submit changes</button><button id="dis" style="display:none">↩ Discard my changes</button><button id="gh">🔗 Connect GitHub</button><button id="prs" style="display:none">📬 Requests</button><button id="in" style="display:none">🔑 Sign in</button><button id="out" style="display:none">Sign out</button><span class="st" id="who"></span><span class="st" id="st"></span></div>
 <div class="leg" id="leg"></div><div class="wrap" id="wrap"><div id="banners"></div><i id="dv"></i><i id="dh"></i><div id="tree"></div></div>
 <div class="side" id="side"></div>
+<script src="pages-auth.js"></script>
 <script>
 let DATA=[];
 const GEN={blue:['Sky blue','Main family couple (1st generation)','#29abe2'],green:['Green','2nd generation','#006d46'],orange:['Orange','3rd generation','#d44d00'],purple:['Velvet','4th generation','#a45cf0'],teal:['Cyan','5th generation','#00a39e'],pink:['Pink','Female who married','#ff4fa8'],yellow:['Yellow','Pastor / nun','#ffce00']};
@@ -369,11 +370,12 @@ $('dis').onclick=()=>{const L=JSON.parse(LIVEJ);dirtyB.forEach(b=>{DATA[b]=L[b];
 
 /* ---- sign-in session (login is checked on the server) ---- */
 let ME=null;
-async function whoami(){try{const r=await fetch('/api/me',{cache:'no-store',credentials:'same-origin'});if(r.ok){const j=await r.json();ME=j&&j.user?j:null}}catch(x){}
+async function whoami(){ME=null;try{const r=await fetch('/api/me',{cache:'no-store',credentials:'same-origin'});if(r.ok){const j=await r.json();if(j&&j.user)ME=j}}catch(x){}
+ if(!ME&&typeof ftLocalSession==='function')ME=ftLocalSession();
  if(ME){$('out').style.display='';$('in').style.display='none';if(S('gh:for')!==ME.user){GH={user:'',token:''};S('gh:user',null);S('gh:token',null);S('gh:for',ME.user)}if(ME.github&&GH.user.toLowerCase()!==ME.github.toLowerCase()){GH={user:ME.github,token:''};S('gh:user',ME.github);S('gh:token',null)}}
- else{$('in').style.display='';$('out').style.display='none';GH={user:'',token:''};['gh:user','gh:token','gh:for'].forEach(k=>S(k,null))}return true}
+ else{$('in').style.display='';$('out').style.display='none';GH={user:'',token:''};['gh:user','gh:token','gh:for'].forEach(k=>S(k,null));if(typeof ftClearLocalSession==='function')ftClearLocalSession()}return true}
 $('in').onclick=()=>{location.href='login.html'};
-$('out').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',credentials:'same-origin'})}catch(x){}['gh:user','gh:token','gh:for'].forEach(k=>S(k,null));location.replace('./')};
+$('out').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',credentials:'same-origin'})}catch(x){}if(typeof ftClearLocalSession==='function')ftClearLocalSession();['gh:user','gh:token','gh:for'].forEach(k=>S(k,null));location.replace('./')};
 
 /* ---- load the published data ---- */
 (async()=>{try{await whoami();const [d,a]=await Promise.all([fetch('data.json',{cache:'no-store',credentials:'same-origin'}).then(r=>{if(!r.ok)throw new Error('data '+r.status);return r.json()}),ME?fetch('access.json',{cache:'no-store',credentials:'same-origin'}).then(r=>{if(!r.ok)throw new Error('access '+r.status);return r.json()}):Promise.resolve(null)]);

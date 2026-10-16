@@ -170,9 +170,10 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;back
 .mb a.btn{display:inline-block;padding:7px 12px;border:1px solid #b8893f;border-radius:7px;background:linear-gradient(#3a2e20,#21190f);color:#f0d9a0;text-decoration:none;font:600 13px var(--ff);margin:6px 6px 0 0}
 .mb .r{flex-wrap:wrap}
 </style></head><body><canvas id="fx"></canvas><div id="spot"></div><div id="flash"></div><div id="pop"></div><div id="modal"><div class="mb"><button class="x" id="mx">×</button><div id="mc"></div></div></div>
-<div class="bar"><input id="q" type="search" placeholder="Search a name…"><button id="ea">Expand all</button><button id="ca">Collapse</button><button id="sz" title="Card size">Aa Size</button><button id="ed">✏️ Edit</button><button id="ab" class="edo" style="display:none">+ Add to branch</button><button id="sub" style="display:none">📤 Submit changes</button><button id="dis" style="display:none">↩ Discard my changes</button><button id="gh">🔗 Connect GitHub</button><button id="prs" style="display:none">📬 Requests</button><button id="in" style="display:none">🔑 Sign in</button><button id="out" style="display:none">Sign out</button><span class="st" id="who"></span><span class="st" id="st"></span></div>
+<div class="bar"><input id="q" type="search" placeholder="Search a name…"><button id="ea">Expand all</button><button id="ca">Collapse</button><button id="sz" title="Card size">Aa Size</button><button id="ed">✏️ Edit</button><button id="upl" style="display:none">Family photos: off</button><button id="ab" class="edo" style="display:none">+ Add to branch</button><button id="sub" style="display:none">📤 Submit changes</button><button id="dis" style="display:none">↩ Discard my changes</button><button id="gh">🔗 Connect GitHub</button><button id="prs" style="display:none">📬 Requests</button><button id="in" style="display:none">🔑 Sign in</button><button id="out" style="display:none">Sign out</button><span class="st" id="who"></span><span class="st" id="st"></span></div>
 <div class="leg" id="leg"></div><div class="wrap" id="wrap"><div id="banners"></div><i id="dv"></i><i id="dh"></i><div id="tree"></div></div>
 <div class="side" id="side"></div>
+<script src="pages-auth.js"></script>
 <script>
 let DATA=[];
 const GEN={blue:['Sky blue','Main family couple (1st generation)','#29abe2'],green:['Green','2nd generation','#006d46'],orange:['Orange','3rd generation','#d44d00'],purple:['Velvet','4th generation','#a45cf0'],teal:['Cyan','5th generation','#00a39e'],pink:['Pink','Female who married','#ff4fa8'],yellow:['Yellow','Pastor / nun','#ffce00']};
@@ -182,13 +183,13 @@ const $=id=>document.getElementById(id);
 const S=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}};
 const E=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 const PH={},NEWPH={};
-let role='viewer',BR=[],dirtyB=[],SENT={},ACCESS=null,META=[],GH={user:S('gh:user')||'',token:S('gh:token')||''},LIVEJ='[]',loaded=false;
+let role='viewer',BR=[],dirtyB=[],SENT={},ACCESS=null,META=[],GH={user:S('gh:user')||'',token:S('gh:token')||''},LIVEJ='[]',loaded=false,PUBLISHED_UPLOADS='admin',SENT_UPLOADS=null;
 let cur=0,sel=null,ed=false,P=new Map(),open=new Set(),hits=new Set(),lastJ='',tm=null;
 $('leg').innerHTML=Object.values(GEN).map(g=>'<span><b style="background:'+g[2]+'"></b>'+g[0]+' = '+g[1]+'</span>').join('')+'<span>✝ Grey name = passed away</span><span><b style="background:#000;color:#777"></b>Black slot = couple both passed away</span>';
 const dead=(n,i)=>typeof (n.dd||[])[i]==='string';
 const BGO=['','A+','A−','B+','B−','AB+','AB−','O+','O−'];
 function getPh(pid){return Promise.resolve(PH[pid]||('photos/'+pid+'.jpg'))}
-function pick(n,i){const f=document.createElement('input');f.type='file';f.accept='image/*';f.onchange=()=>{const file=f.files[0];if(!file)return;const img=new Image(),u=URL.createObjectURL(file);
+function pick(n,i){if(!canUploadPhotos())return;const f=document.createElement('input');f.type='file';f.accept='image/*';f.onchange=()=>{const file=f.files[0];if(!file)return;const img=new Image(),u=URL.createObjectURL(file);
  img.onload=()=>{const s=Math.min(1,320/Math.max(img.width,img.height)),cv=document.createElement('canvas');cv.width=Math.round(img.width*s);cv.height=Math.round(img.height*s);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(u);
   const d=cv.toDataURL('image/jpeg',.72),pid='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);PH[pid]=d;NEWPH[pid]=d;
   n.ph=n.ph||[];n.ph[i]=pid;ch(n)};img.src=u};f.click()}
@@ -231,7 +232,8 @@ function ch(n){reindex();save();render();show(n)}
 function show(n){sel=n;document.querySelectorAll('.c.sel').forEach(e=>e.classList.remove('sel'));const ce=document.querySelector('.c[data-id="'+n.id+'"]');ce&&ce.classList.add('sel');const s=$('side'),pth=path(n.id);let h='<button class="x" onclick="hide()">×</button>';
  const em=ed&&canEditNode(n);if(!em){h+='<h3>'+n.names.map(E).join(' &amp; ')+'</h3><div class="m">'+(GEN[n.c]?GEN[n.c][1]+'<br>':'')+(pth.length?'Line: '+pth.map(E).join(' → ')+'<br>':'')+(n.bg&&n.bg.some(Boolean)?'Blood group: '+n.names.map((x,i)=>n.bg[i]?E(x)+' — '+E(n.bg[i]):'').filter(Boolean).join(' · ')+'<br>':'')+(n.dd&&n.dd.some(x=>typeof x==='string')?'✝ Passed away: '+n.names.map((x,i)=>dead(n,i)?E(x)+(n.dd[i]?' — '+E(n.dd[i]):''):'').filter(Boolean).join(' · ')+'<br>':'')+(n.kids.length?'Descendants shown: '+cnt(n)+' · Children boxes: '+n.kids.length:'No children listed')+'</div>'+(n.kids.length?'<div class="m">'+n.kids.map(x=>E(x.names.join(' & '))).join(' · ')+'</div>':'')+(ME?'':'<div class="m">🔒 Phone, address and blood group are shown to signed-in family members.</div>')+'<div class="ph" id="vph"></div>';
   h+=contact(n);const l=n.link||LINKS[n.names[0]]||'';h+=/^https?:/.test(l)?'<div class="m"><a href="'+E(l)+'" target="_blank" rel="noopener">Open link</a></div>':(ed&&!em?'<div class="warn">You can edit only your assigned branches ('+E(BR.map(b=>DATA[b]?DATA[b].names[0]:'').join(', '))+').</div>':'<div class="m">Tap ✏️ Edit to rename people, add a link, phone, address, blood group, or family members.</div>')}
- else{h+='<h3>Edit member</h3>'+n.names.map((x,i)=>'<div class="pp"><div class="r"><input class="nm" data-i="'+i+'" value="'+E(x)+'" placeholder="'+(i?'Spouse / partner':'Name')+'"><select class="bgs" data-i="'+i+'" title="Blood group">'+BGO.map(g=>'<option value="'+g+'"'+(g===((n.bg||[])[i]||'')?' selected':'')+'>'+(g?'🩸 '+g:'🩸 —')+'</option>').join('')+'</select>'+(n.names.length>1?'<button data-rm="'+i+'">×</button>':'')+'</div><div class="r"><label class="ck"><input type="checkbox" class="dc" data-i="'+i+'"'+(dead(n,i)?' checked':'')+'> ✝ Passed away</label><input class="dt" data-i="'+i+'" placeholder="Year or date" value="'+E(dead(n,i)?(n.dd[i]||''):'')+'"'+(dead(n,i)?'':' disabled')+'></div><div class="r"><button class="up" data-i="'+i+'">📷 '+((n.ph||[])[i]?'Change':'Add')+' photo</button>'+((n.ph||[])[i]?'<button class="rp" data-i="'+i+'">Remove</button><img class="th" alt="" data-pid="'+n.ph[i]+'">':'')+'</div></div>').join('')
+ else{h+='<h3>Edit member</h3>'+n.names.map((x,i)=>'<div class="pp"><div class="r"><input class="nm" data-i="'+i+'" value="'+E(x)+'" placeholder="'+(i?'Spouse / partner':'Name')+'"><select class="bgs" data-i="'+i+'" title="Blood group">'+BGO.map(g=>'<option value="'+g+'"'+(g===((n.bg||[])[i]||'')?' selected':'')+'>'+(g?'🩸 '+g:'🩸 —')+'</option>').join('')+'</select>'+(n.names.length>1?'<button data-rm="'+i+'">×</button>':'')+'</div><div class="r"><label class="ck"><input type="checkbox" class="dc" data-i="'+i+'"'+(dead(n,i)?' checked':'')+'> ✝ Passed away</label><input class="dt" data-i="'+i+'" placeholder="Year or date" value="'+E(dead(n,i)?(n.dd[i]||''):'')+'"'+(dead(n,i)?'':' disabled')+'></div>'+(canUploadPhotos()?'<div class="r"><button class="up" data-i="'+i+'">📷 '+((n.ph||[])[i]?'Change':'Add')+' photo</button>'+((n.ph||[])[i]?'<button class="rp" data-i="'+i+'">Remove</button><img class="th" alt="" data-pid="'+n.ph[i]+'">':'')+'</div>':((n.ph||[])[i]?'<div class="r"><img class="th" alt="" data-pid="'+n.ph[i]+'"></div>':''))+'</div>').join('')
+  +(canUploadPhotos()?'':'<div class="m">Photo uploads are off for editors. The admin can turn them on.</div>')
   +'<button id="an">+ Spouse / name line</button><div class="m">Category</div><select id="cat">'+Object.keys(GEN).map(k=>'<option value="'+k+'"'+(k===n.c?' selected':'')+'>'+GEN[k][0]+' — '+GEN[k][1]+'</option>').join('')+'</select><div class="m">Link</div><input id="lk" value="'+E(n.link||'')+'" placeholder="https://… (photo, profile, document)"><div class="m">📞 Phone number</div><input id="tel" type="tel" value="'+E(n.tel||'')+'" placeholder="+91 …"><div class="m">📍 Address</div><textarea id="addr" rows="2" placeholder="House, street, town">'+E(n.addr||'')+'</textarea><div class="r"><button id="ac">+ Add child</button><button id="dl" class="dn">Delete</button></div>'}
  s.innerHTML=h;s.style.display='block';
  if(!em){const v=$('vph');(n.ph||[]).forEach((p,i)=>{if(!p)return;const f=document.createElement('figure');f.innerHTML='<img alt=""><figcaption>'+E(n.names[i])+'</figcaption>';v.appendChild(f);getPh(p).then(u=>{if(u)f.firstChild.src=u})});return}
@@ -305,14 +307,20 @@ function resolveRole(){const u=(GH.user||'').toLowerCase();BR=[];role='viewer';i
  const e=Object.entries(ACCESS.users||{}).find(([k])=>k.toLowerCase()===u);
  if(e){BR=e[1].map(f=>META.indexOf(f)).filter(i=>i>=0);if(BR.length)role='editor'}}
 const unsentB=()=>dirtyB.filter(b=>DATA[b]&&SENT[b]!==hash(JSON.stringify(DATA[b])));
+function uploadsMode(){return ACCESS&&ACCESS.uploads==='family'?'family':'admin'}
+function canUploadPhotos(){return role==='admin'||(role==='editor'&&uploadsMode()==='family')}
+function accessUnsent(){return !!ACCESS&&uploadsMode()!==PUBLISHED_UPLOADS&&SENT_UPLOADS!==uploadsMode()}
+function accessFile(){return JSON.stringify({repo:ACCESS.repo,admin:ACCESS.admin,uploads:uploadsMode(),users:ACCESS.users},null,2)+'\n'}
+function loadUploadsDraft(){if(!ACCESS||!GH.user)return;const u=S('uploads:'+GH.user.toLowerCase());if(u==='admin'||u==='family')ACCESS.uploads=u}
 function refreshDirty(){let L=[];try{L=JSON.parse(LIVEJ)}catch(x){}
  dirtyB=BR.filter(b=>L[b]&&DATA[b]&&JSON.stringify(DATA[b])!==JSON.stringify(L[b]));
  const dr={};dirtyB.forEach(b=>dr[b]=DATA[b]);if(GH.user)S('draft:'+GH.user.toLowerCase(),dirtyB.length?JSON.stringify(dr):null);setRole()}
-function loadDrafts(){dirtyB=[];if(!GH.user||!BR.length)return;try{const dr=JSON.parse(S('draft:'+GH.user.toLowerCase())||'{}');Object.keys(dr).forEach(b=>{if(BR.includes(+b)&&DATA[+b])DATA[+b]=dr[b]});reindex();refreshDirty()}catch(x){}}
+function loadDrafts(){loadUploadsDraft();dirtyB=[];if(!GH.user||!BR.length)return;try{const dr=JSON.parse(S('draft:'+GH.user.toLowerCase())||'{}');Object.keys(dr).forEach(b=>{if(BR.includes(+b)&&DATA[+b])DATA[+b]=dr[b]});reindex();refreshDirty()}catch(x){}}
 function setRole(){const ok=role==='admin'||role==='editor';
  $('who').textContent=(ME?ME.name+' · ':'')+(role==='admin'?'👑 Admin · @'+GH.user:role==='editor'?'✏️ @'+GH.user:GH.user?'👁 @'+GH.user+' (no branches assigned)':(ME?'👁 View only':'👁 Public view'));
+ $('upl').style.display=role==='admin'?'':'none';$('upl').textContent=uploadsMode()==='family'?'Family photos: on':'Family photos: off';$('upl').classList.toggle('on',uploadsMode()==='family');
  $('gh').style.display=ME?'':'none';$('gh').textContent=GH.user?'🔗 @'+GH.user:'🔗 Connect GitHub';
- $('sub').style.display=ok&&unsentB().length?'':'none';$('dis').style.display=ok&&dirtyB.length?'':'none';$('prs').style.display=REPO()?'':'none'}
+ $('sub').style.display=ok&&(unsentB().length||accessUnsent())?'':'none';$('dis').style.display=ok&&(dirtyB.length||(!!ACCESS&&uploadsMode()!==PUBLISHED_UPLOADS))?'':'none';$('prs').style.display=REPO()?'':'none'}
 function save(){refreshDirty();st('Draft kept on this device — tap “Submit changes” to send it as a pull request')}
 function apply(){}
 
@@ -327,42 +335,51 @@ function ghDialog(){modal('<h3>Connect your GitHub account</h3><div class="m">Yo
    st(role==='viewer'?'@'+u+' has no branches assigned yet — ask the admin to add you to data/access.json':'Connected as @'+u)};
   const x=m.querySelector('#gx');if(x)x.onclick=()=>{GH={user:'',token:''};S('gh:user',null);S('gh:token',null);if(ed){ed=false;$('ed').classList.remove('on');document.querySelectorAll('.edo').forEach(e=>e.style.display='none')}resolveRole();dirtyB=[];setRole();render();$('modal').style.display='none'}})}
 $('gh').onclick=ghDialog;
+$('upl').onclick=()=>{if(role!=='admin'||!ACCESS)return;ACCESS.uploads=uploadsMode()==='family'?'admin':'family';SENT_UPLOADS=null;if(GH.user)S('uploads:'+GH.user.toLowerCase(),uploadsMode()===PUBLISHED_UPLOADS?null:uploadsMode());setRole();if(sel&&$('side').style.display==='block')show(sel);st(uploadsMode()==='family'?'Family editors will be able to add photos after you submit and merge this':'Only you will be able to add photos after you submit and merge this')};
 $('prs').onclick=()=>window.open('https://github.com/'+REPO()+'/pulls','_blank','noopener');
 
 /* ---- send changes as a pull request ---- */
 const branchJson=b=>JSON.stringify({id:DATA[b].id,names:DATA[b].names,kids:DATA[b].kids},null,2)+'\n';
 const b64=s=>btoa(unescape(encodeURIComponent(s)));
 function newPhotos(bs){const o={};bs.forEach(b=>(function f(n){(n.ph||[]).forEach(p=>{if(p&&NEWPH[p])o[p]=NEWPH[p]});n.kids.forEach(f)})(DATA[b]));return o}
-async function createPR(bs,note){const repo=REPO(),L=JSON.parse(LIVEJ),ph=newPhotos(bs);
+async function createPR(bs,note){const repo=REPO(),L=JSON.parse(LIVEJ),ph=canUploadPhotos()?newPhotos(bs):{},accessChanged=!!ACCESS&&uploadsMode()!==PUBLISHED_UPLOADS;
+ if(!bs.length&&!accessChanged)throw new Error('Nothing to send');
  const base=(await ghApi('/repos/'+repo+'/git/ref/heads/main')).object.sha,name='edit/'+GH.user.toLowerCase()+'-'+Date.now().toString(36);
  await ghApi('/repos/'+repo+'/git/refs',{method:'POST',body:JSON.stringify({ref:'refs/heads/'+name,sha:base})});
  const put=async(path,b64c,msg)=>{let sha;try{sha=(await ghApi('/repos/'+repo+'/contents/'+path+'?ref='+encodeURIComponent(name))).sha}catch(x){if(x.status!==404)throw x}
   await ghApi('/repos/'+repo+'/contents/'+path,{method:'PUT',body:JSON.stringify({message:msg,content:b64c,branch:name,sha})})};
  for(const id of Object.keys(ph))await put('data/photos/'+id+'.jpg',ph[id].split(',')[1],'Add photo '+id);
  for(const b of bs)await put('data/branches/'+META[b],b64(branchJson(b)),'Update '+DATA[b].names.join(' / '));
+ if(accessChanged)await put('data/access.json',b64(accessFile()),uploadsMode()==='family'?'Allow family photo uploads':'Limit photo uploads to the admin');
  const lines=bs.map(b=>'**'+DATA[b].names.join(' / ')+'**\n'+diff(L[b],DATA[b]).slice(0,60).map(x=>'- '+x).join('\n')).join('\n\n');
- return ghApi('/repos/'+repo+'/pulls',{method:'POST',body:JSON.stringify({title:'@'+GH.user+': update '+bs.map(b=>DATA[b].names[0]).join(', '),head:name,base:'main',body:(note?'> '+note.replace(/\n/g,'\n> ')+'\n\n':'')+lines})})}
+ const accLine=accessChanged?('Photo uploads: '+(uploadsMode()==='family'?'family editors may add photos':'only the admin may add photos')+'\n\n'):'';
+ const title=bs.length?'@'+GH.user+': update '+bs.map(b=>DATA[b].names[0]).join(', '):'@'+GH.user+': '+(uploadsMode()==='family'?'allow family photo uploads':'limit photo uploads to the admin');
+ return ghApi('/repos/'+repo+'/pulls',{method:'POST',body:JSON.stringify({title,head:name,base:'main',body:(note?'> '+note.replace(/\n/g,'\n> ')+'\n\n':'')+accLine+lines})})}
 function manualHtml(bs,ph){const repo=REPO();if(!repo)return '<div class="m">The repository is not configured in data/access.json.</div>';
+ const acc=ACCESS&&uploadsMode()!==PUBLISHED_UPLOADS?'<div class="m">Photo upload setting — copy this over <b>data/access.json</b> in the same pull request.</div><div class="r"><button class="cp" data-acc="1">Copy access.json</button><a class="btn" target="_blank" rel="noopener" href="https://github.com/'+repo+'/edit/main/data/access.json">Open access.json</a></div>':'';
  return '<div class="m">1. Copy the updated file. 2. Open it on GitHub, select all, paste. 3. “Commit changes” → choose <b>Create a new branch and start a pull request</b>.</div>'
+ +acc
  +bs.map(b=>'<div class="r"><button class="cp" data-b="'+b+'">Copy '+E(DATA[b].names[0])+'</button><a class="btn" target="_blank" rel="noopener" href="https://github.com/'+repo+'/edit/main/data/branches/'+encodeURIComponent(META[b])+'">Open on GitHub</a></div>').join('')
  +(Object.keys(ph).length?'<div class="m">New photos — download them, then add them in the same pull request (<a target="_blank" rel="noopener" href="https://github.com/'+repo+'/upload/main/data/photos">upload page</a>):</div>'+Object.keys(ph).map(id=>'<a class="btn" download="'+id+'.jpg" href="'+ph[id]+'">⬇ '+id+'.jpg</a>').join(''):'')}
-$('sub').onclick=()=>{const L=JSON.parse(LIVEJ),bs=unsentB(),ph=newPhotos(bs);
- modal('<h3>Send your changes</h3>'+bs.map(b=>'<div class="m"><b>'+E(DATA[b].names.join(' / '))+'</b></div>'+dlist(diff(L[b],DATA[b]))).join('')+'<textarea id="nt" rows="2" placeholder="Note for the admin (optional)"></textarea>'+(GH.token?'<button id="go">Create pull request</button><div class="m">Or do it by hand:</div>':'<div class="m">No token connected — do it by hand:</div>')+manualHtml(bs,ph)+'<div id="gm" class="warn"></div>',m=>{
-  m.querySelectorAll('.cp').forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(branchJson(+b.dataset.b));b.textContent='Copied ✔'}catch(x){b.textContent='Copy failed'}});
-  const go=m.querySelector('#go');if(go)go.onclick=async()=>{go.disabled=true;go.textContent='Creating…';try{const pr=await createPR(bs,m.querySelector('#nt').value.slice(0,500));bs.forEach(b=>{SENT[b]=hash(JSON.stringify(DATA[b]))});setRole();m.innerHTML='<h3>✅ Pull request created</h3><div class="m">The admin will review it. You will get a GitHub email when it is merged or closed.</div><a class="btn" target="_blank" rel="noopener" href="'+E(pr.html_url)+'">Open the pull request</a>'}catch(x){go.disabled=false;go.textContent='Create pull request';m.querySelector('#gm').textContent='Could not create it ('+(x.message||'error').slice(0,120)+'). You can use the manual steps below.'}}})};
-$('dis').onclick=()=>{const L=JSON.parse(LIVEJ);dirtyB.forEach(b=>{DATA[b]=L[b];delete SENT[b]});dirtyB=[];if(GH.user)S('draft:'+GH.user.toLowerCase(),null);reindex();sel=null;hide();render();setRole();st('Back to the published version')};
+$('sub').onclick=()=>{const L=JSON.parse(LIVEJ),bs=unsentB(),ph=canUploadPhotos()?newPhotos(bs):{};
+ const accNote=accessUnsent()?'<div class="m"><b>Photo uploads</b>: '+(uploadsMode()==='family'?'family editors may add photos':'only the admin may add photos')+'</div>':'';
+ modal('<h3>Send your changes</h3>'+accNote+bs.map(b=>'<div class="m"><b>'+E(DATA[b].names.join(' / '))+'</b></div>'+dlist(diff(L[b],DATA[b]))).join('')+'<textarea id="nt" rows="2" placeholder="Note for the admin (optional)"></textarea>'+(GH.token?'<button id="go">Create pull request</button><div class="m">Or do it by hand:</div>':'<div class="m">No token connected — do it by hand:</div>')+manualHtml(bs,ph)+'<div id="gm" class="warn"></div>',m=>{
+  m.querySelectorAll('.cp').forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.dataset.acc?accessFile():branchJson(+b.dataset.b));b.textContent='Copied ✔'}catch(x){b.textContent='Copy failed'}});
+  const go=m.querySelector('#go');if(go)go.onclick=async()=>{go.disabled=true;go.textContent='Creating…';try{const pr=await createPR(bs,m.querySelector('#nt').value.slice(0,500));bs.forEach(b=>{SENT[b]=hash(JSON.stringify(DATA[b]))});if(uploadsMode()!==PUBLISHED_UPLOADS)SENT_UPLOADS=uploadsMode();setRole();m.innerHTML='<h3>✅ Pull request created</h3><div class="m">The admin will review it. You will get a GitHub email when it is merged or closed.</div><a class="btn" target="_blank" rel="noopener" href="'+E(pr.html_url)+'">Open the pull request</a>'}catch(x){go.disabled=false;go.textContent='Create pull request';m.querySelector('#gm').textContent='Could not create it ('+(x.message||'error').slice(0,120)+'). You can use the manual steps below.'}}})};
+$('dis').onclick=()=>{const L=JSON.parse(LIVEJ);dirtyB.forEach(b=>{DATA[b]=L[b];delete SENT[b]});dirtyB=[];if(ACCESS)ACCESS.uploads=PUBLISHED_UPLOADS;SENT_UPLOADS=null;if(GH.user){S('draft:'+GH.user.toLowerCase(),null);S('uploads:'+GH.user.toLowerCase(),null)}reindex();sel=null;hide();render();setRole();st('Back to the published version')};
 
 /* ---- sign-in session (login is checked on the server) ---- */
 let ME=null;
-async function whoami(){try{const r=await fetch('/api/me',{cache:'no-store',credentials:'same-origin'});if(r.ok){const j=await r.json();ME=j&&j.user?j:null}}catch(x){}
+async function whoami(){ME=null;try{const r=await fetch('/api/me',{cache:'no-store',credentials:'same-origin'});if(r.ok){const j=await r.json();if(j&&j.user)ME=j}}catch(x){}
+ if(!ME&&typeof ftLocalSession==='function')ME=ftLocalSession();
  if(ME){$('out').style.display='';$('in').style.display='none';if(S('gh:for')!==ME.user){GH={user:'',token:''};S('gh:user',null);S('gh:token',null);S('gh:for',ME.user)}if(ME.github&&GH.user.toLowerCase()!==ME.github.toLowerCase()){GH={user:ME.github,token:''};S('gh:user',ME.github);S('gh:token',null)}}
- else{$('in').style.display='';$('out').style.display='none';GH={user:'',token:''};['gh:user','gh:token','gh:for'].forEach(k=>S(k,null))}return true}
+ else{$('in').style.display='';$('out').style.display='none';GH={user:'',token:''};['gh:user','gh:token','gh:for'].forEach(k=>S(k,null));if(typeof ftClearLocalSession==='function')ftClearLocalSession()}return true}
 $('in').onclick=()=>{location.href='login.html'};
-$('out').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',credentials:'same-origin'})}catch(x){}['gh:user','gh:token','gh:for'].forEach(k=>S(k,null));location.replace('./')};
+$('out').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',credentials:'same-origin'})}catch(x){}if(typeof ftClearLocalSession==='function')ftClearLocalSession();['gh:user','gh:token','gh:for'].forEach(k=>S(k,null));location.replace('./')};
 
 /* ---- load the published data ---- */
 (async()=>{try{await whoami();const [d,a]=await Promise.all([fetch('data.json',{cache:'no-store',credentials:'same-origin'}).then(r=>{if(!r.ok)throw new Error('data '+r.status);return r.json()}),ME?fetch('access.json',{cache:'no-store',credentials:'same-origin'}).then(r=>{if(!r.ok)throw new Error('access '+r.status);return r.json()}):Promise.resolve(null)]);
- ACCESS=a;META=d.files;LIVEJ=JSON.stringify(d.tree);DATA=JSON.parse(LIVEJ);reindex();DATA.forEach(r=>r.kids.forEach(k=>open.add(k.id)));loaded=true;
+ ACCESS=a;if(ACCESS){ACCESS.uploads=ACCESS.uploads==='family'?'family':'admin';PUBLISHED_UPLOADS=ACCESS.uploads}META=d.files;LIVEJ=JSON.stringify(d.tree);DATA=JSON.parse(LIVEJ);reindex();DATA.forEach(r=>r.kids.forEach(k=>open.add(k.id)));loaded=true;
  resolveRole();loadDrafts();render();enter();place();setRole()}
  catch(e){$('tree').innerHTML='<div class="m" style="padding:30px 6px">Could not load the family data ('+E(e.message)+').</div>'}})();
 </script></body></html>

@@ -34,14 +34,20 @@ button.go:disabled{opacity:.55;cursor:wait}
   <a class="back" href="./">← Back to the family tree</a>
   <div class="note">Accounts are created by the family admin — there is no sign-up. Ask them if you need access.</div>
 </main>
+<script src="pages-auth.js"></script>
 <script>
 const $=id=>document.getElementById(id);
+const goNext=()=>{const n=new URLSearchParams(location.search).get('next');location.replace(n&&!n.startsWith('//')&&!n.includes(':')?n:'./')};
 $('eye').onclick=()=>{const s=$('p').type==='password';$('p').type=s?'text':'password';$('eye').textContent=s?'Hide':'Show'};
 $('f').onsubmit=async e=>{e.preventDefault();$('go').disabled=true;$('msg').textContent='';
- try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({username:$('u').value,password:$('p').value})});
-  const d=await r.json().catch(()=>({}));
-  if(r.ok){const n=new URLSearchParams(location.search).get('next');location.replace(n&&!n.startsWith('//')&&!n.includes(':')?n:'./');return}
-  $('msg').textContent=d.error||'Sign-in failed.';$('p').value='';$('p').focus()}
- catch(x){$('msg').textContent='Network problem — check your connection.'}
- $('go').disabled=false};
+ const username=$('u').value,password=$('p').value;
+ try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({username,password})});
+  const ct=r.headers.get('content-type')||'';
+  if(r.ok){goNext();return}
+  if(ct.includes('application/json')&&r.status!==404){const d=await r.json().catch(()=>({}));$('msg').textContent=d.error||'Wrong username or password.';$('p').value='';$('p').focus();$('go').disabled=false;return}}
+ catch(x){}
+ try{if(await ftLocalLogin(username,password)){goNext();return}
+  $('msg').textContent='Wrong username or password.'}
+ catch(x){$('msg').textContent='Sign-in failed.'}
+ $('p').value='';$('p').focus();$('go').disabled=false};
 </script></body></html>
