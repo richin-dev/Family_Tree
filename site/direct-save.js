@@ -7,8 +7,31 @@
   // "saved" = committed to GitHub but the published site may not have rebuilt yet; forget it once the site catches up.
   function cleanSaved() { try { DATA.forEach((r, b) => { const k = S(savedKey(b)); if (k && k === normB(r)) S(savedKey(b), null); }); } catch (x) {} }
   const _ld = loadDrafts; loadDrafts = function () { cleanSaved(); return _ld.apply(this, arguments); };
-  const _sr = setRole; setRole = function () { _sr.apply(this, arguments); try { $('sub').textContent = role === 'admin' ? '💾 Save to site' : '📤 Submit changes'; } catch (x) {} };
-  const _sub = $('sub').onclick; $('sub').onclick = function () { if (role === 'admin') { adminSave(); return; } return _sub && _sub.apply(this, arguments); };
+  const _sr = setRole; setRole = function () { _sr.apply(this, arguments); try { $('sub').textContent = role === 'admin' ? '💾 Save changes' : '📤 Submit changes'; } catch (x) {} };
+  const _sub = $('sub').onclick; $('sub').onclick = function () { if (role === 'admin') { adminSaveNow(); return; } return _sub && _sub.apply(this, arguments); };
+  function toast(t) {
+    let e = document.getElementById('ds-toast');
+    if (!e) { e = document.createElement('div'); e.id = 'ds-toast'; e.setAttribute('role', 'status'); e.style.cssText = 'position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:12;max-width:92vw;padding:11px 16px;border-radius:12px;border:1px solid #b8893f;background:#1f1a14;color:#f0d9a0;font:600 14px system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.6);text-align:center'; document.body.appendChild(e); }
+    e.textContent = t; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => { e.style.display = 'none'; }, 7000);
+  }
+  // One tap: saves straight to the site (no confirmation step).
+  async function adminSaveNow() {
+    if (!GH.token) { adminSave(); return; }                 // no token yet: explain how to connect one
+    const bs = unsentB(); if (!bs.length) return;
+    const btn = $('sub'); btn.disabled = true; btn.textContent = '⏳ Saving…';
+    try {
+      await saveDirect(bs); bs.forEach(b => { SENT[b] = hash(JSON.stringify(DATA[b])); });
+      toast('✅ Saved — the live site updates in about a minute'); st('Saved to GitHub — live in about a minute');
+    } catch (x) {
+      const msg = String(x.message || 'error');
+      modal('<h3>Could not save</h3><div class="warn">' + E(saveErr(x, msg)) + '</div><button id="rt">Try again</button>', m => { m.querySelector('#rt').onclick = () => { $('modal').style.display = 'none'; adminSaveNow(); }; });
+    } finally { btn.disabled = false; setRole(); }
+  }
+  function saveErr(x, msg) {
+    return x.conflict
+      ? '“' + x.conflict + '” was changed on GitHub since you opened this page (for example a pull request was merged). Reload the page, then repeat your edit so nothing is overwritten.'
+      : 'Could not save (' + msg.slice(0, 140) + ')' + (/protected|rule|bypass/i.test(msg) ? ' — in the repository ruleset, set “Repository admin” to “Always allow” in the bypass list.' : (x.status === 401 || x.status === 403 || x.status === 404 ? ' — check the token is still valid and has Contents: read & write on this repository.' : (x.status === 409 || x.status === 422 ? ' — GitHub says the file changed; reload and retry.' : '')));
+  }
 
   async function remoteBranch(b) {
     const f = await ghApi('/repos/' + REPO() + '/contents/data/branches/' + encodeURIComponent(META[b]) + '?ref=main');
@@ -29,7 +52,7 @@
   }
   function adminSave() {
     const L = JSON.parse(LIVEJ), bs = unsentB(), ph = newPhotos(bs);
-    modal('<h3>Save to the website</h3><div class="m">Saved straight to GitHub — no pull request. The live site updates in about a minute.</div>'
+    modal('<h3>Save changes</h3><div class="m">Saved straight to GitHub — no pull request. The live site updates in about a minute.</div>'
       + bs.map(b => '<div class="m"><b>' + E(DATA[b].names.join(' / ')) + '</b></div>' + dlist(diff(L[b], DATA[b]))).join('')
       + (GH.token ? '<button id="go">💾 Save now</button>' : '<div class="warn">To save directly, connect GitHub with a token that has <b>Contents: read &amp; write</b> (tap 🔗 at the top). Or save by hand:</div>' + manualHtml(bs, ph))
       + '<div id="gm" class="warn"></div>', m => {
@@ -42,10 +65,7 @@
             m.innerHTML = '<h3>✅ Saved</h3><div class="m">Your changes are in GitHub. The live site updates in about a minute — reload then.</div>'; st('Saved to GitHub — live in about a minute');
           } catch (x) {
             go.disabled = false; go.textContent = '💾 Save now';
-            const msg = String(x.message || 'error');
-            m.querySelector('#gm').textContent = x.conflict
-              ? '“' + x.conflict + '” was changed on GitHub since you opened this page (for example a pull request was merged). Reload the page, then repeat your edit so nothing is overwritten.'
-              : 'Could not save (' + msg.slice(0, 140) + ')' + (/protected|rule|bypass/i.test(msg) ? ' — in the repository ruleset, set “Repository admin” to “Always allow” in the bypass list.' : (x.status === 403 || x.status === 404 ? ' — check the token has Contents: read & write on this repository.' : (x.status === 409 || x.status === 422 ? ' — GitHub says the file changed; reload and retry.' : '')));
+            m.querySelector('#gm').textContent = saveErr(x, String(x.message || 'error'));
           }
         };
       });
