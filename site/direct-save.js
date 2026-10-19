@@ -4,9 +4,21 @@
   const stripK = ks => ks.map(({ tel, addr, bg, ...r }) => ({ ...r, kids: stripK(r.kids || []) }));
   const normB = r => JSON.stringify({ id: r.id, names: r.names, kids: NOCONTACT ? stripK(r.kids || []) : (r.kids || []) });
   const savedKey = b => 'saved:' + b;
+  // Repo name: from data/access.json, or guessed from the web address (https://OWNER.github.io/REPO/).
+  const repoName = () => { let r = ''; try { r = REPO(); } catch (x) {} if (r) return r; const m = /^([^.]+)\.github\.io$/.exec(location.hostname), seg = location.pathname.split('/')[1]; return m && seg ? m[1] + '/' + seg : ''; };
+  // Admin = the signed-in token holder has ADMIN rights on the repository (GitHub decides; no need to edit access.json).
+  window.__repoAdmin = false; let adminChecked = '';
+  async function verifyAdmin() {
+    const key = (GH.user || '') + '|' + (GH.token || '') + '|' + repoName();
+    if (key === adminChecked) return; adminChecked = key;
+    let isAdm = false;
+    if (GH.token && repoName()) { try { const r = await ghApi('/repos/' + repoName()); isAdm = !!(r && r.permissions && r.permissions.admin); } catch (x) {} }
+    if (isAdm !== window.__repoAdmin) { window.__repoAdmin = isAdm; try { resolveRole(); loadDrafts(); render(); setRole(); } catch (x) {} }
+  }
+  const _rr = resolveRole; resolveRole = function () { _rr.apply(this, arguments); if (window.__repoAdmin) { role = 'admin'; BR = META.map((x, i) => i); } };
   // "saved" = committed to GitHub but the published site may not have rebuilt yet; forget it once the site catches up.
   function cleanSaved() { try { DATA.forEach((r, b) => { const k = S(savedKey(b)); if (k && k === normB(r)) S(savedKey(b), null); }); } catch (x) {} }
-  const _ld = loadDrafts; loadDrafts = function () { cleanSaved(); return _ld.apply(this, arguments); };
+  const _ld = loadDrafts; loadDrafts = function () { cleanSaved(); verifyAdmin(); return _ld.apply(this, arguments); };
   const _sr = setRole; setRole = function () { _sr.apply(this, arguments); try { $('sub').textContent = role === 'admin' ? '💾 Save changes' : '📤 Submit changes'; } catch (x) {} };
   const _sub = $('sub').onclick; $('sub').onclick = function () { if (role === 'admin') { adminSaveNow(); return; } return _sub && _sub.apply(this, arguments); };
   function toast(t) {
@@ -34,11 +46,11 @@
   }
 
   async function remoteBranch(b) {
-    const f = await ghApi('/repos/' + REPO() + '/contents/data/branches/' + encodeURIComponent(META[b]) + '?ref=main');
+    const f = await ghApi('/repos/' + repoName() + '/contents/data/branches/' + encodeURIComponent(META[b]) + '?ref=main');
     return { sha: f.sha, obj: JSON.parse(decodeURIComponent(escape(atob(f.content.replace(/\s/g, ''))))) };
   }
   async function saveDirect(bs) {
-    const repo = REPO(), L = JSON.parse(LIVEJ), ph = newPhotos(bs), cur = {};
+    const repo = repoName(), L = JSON.parse(LIVEJ), ph = newPhotos(bs), cur = {};
     for (const b of bs) {            // never overwrite something that changed on GitHub since this page loaded
       const r = await remoteBranch(b); cur[b] = r; const rem = normB(r.obj);
       if (rem !== normB(L[b]) && rem !== S(savedKey(b))) { const e = new Error('conflict'); e.conflict = DATA[b].names.join(' / '); throw e; }
