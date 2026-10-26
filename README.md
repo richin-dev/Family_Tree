@@ -19,6 +19,20 @@ relative edits on the site ──► pull request (branch + diff) ──► auto
 2. **`validate` check** (`scripts/validate.mjs`, run by `.github/workflows/validate.yml`): rejects a pull request if its author touches a branch they are not assigned to, edits `data/access.json`, the workflows or scripts, changes a grandparents' title, adds a photo that isn't a small JPEG used by their branch, or breaks the data format (duplicate ids, unknown fields, `javascript:` links …). It reads the pull request **as data only** and takes the rules from `main`, so a pull request cannot change the rules that judge it.
 3. **CODEOWNERS** (`.github/CODEOWNERS`): you are the required reviewer for every file.
 
+## Local preview
+
+On Windows, install Node.js 20 or newer, open this folder in VS Code, and run:
+
+```bash
+copy .dev.vars.example .dev.vars
+npm run build
+node scripts/dev-server.mjs
+```
+
+Then open `http://localhost:8788`. The example environment file is only a template: create real user records with `node scripts/make-user.mjs add ...`, set `AUTH_USERS` to the output of `node scripts/make-user.mjs print`, and replace `SESSION_SECRET` with a random secret of at least 32 characters. Keep `.dev.vars` private; it is ignored by Git.
+
+The build uses `site/index.html` and `site/login.html` when those files exist, and falls back to the root `index.html` and `login.html` for older project snapshots.
+
 ## One-time setup
 1. **Create a private GitHub repository** and upload this folder (or `git init`, `git push`). Your GitHub account should have 2-step verification on.
 2. **Edit three things** and commit them to `main`:
@@ -75,6 +89,10 @@ Open the site → **✏️ Edit** → enter their GitHub username (optionally a 
 
 ## How you approve
 GitHub emails you. Open the pull request: a bot comment lists, in plain words, who was added/renamed/removed/changed (phone, address, blood group, photo …) and whether the checks passed; **Files changed** shows the exact diff. **Merge** = approved (site updates in ~1–2 min). **Close** = rejected — write why in a comment. The person gets a comment (`@name`) and GitHub's own email either way. **History** = the repository's commit list; any change can be reverted with one click.
+
+## Hosting note
+
+Use **Cloudflare Pages with Functions and the required encrypted environment variables** for the server-enforced login and private contact-field filtering. The GitHub Pages workflow is a static, view-only fallback; static hosting cannot enforce the same server-side login and privacy controls. Do not treat a browser-only login as protection for private data.
 
 ## Please be aware
 - **Tested here:** the login (36 checks: visitors get only the public copy, wrong/unknown user, forged or expired cookies, removed users, lock-out) and in a real browser (login, sign-out, mobile); the `validate` script (24 scenarios in a real temporary git repo, plus a check that files made by the site pass them: allowed edits pass; wrong branch, edits to rules/workflows, bad data, bad photos, missing assignments all fail) and the site (editing, the pull-request calls against a *simulated* GitHub API, mobile layout).

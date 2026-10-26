@@ -23,15 +23,19 @@ fs.writeFileSync('dist/data.public.json', JSON.stringify({ files: meta.files, tr
 const uploads = access.uploads === 'family' ? 'family' : 'admin';
 fs.writeFileSync('dist/access.json', JSON.stringify({ repo: access.repo, admin: access.admin, uploads, users: access.users }));
 const pagesBase = process.env.PAGES_BASE || '';
-function copyHtml(src, dest) {
-  let html = fs.readFileSync(src, 'utf8');
+function copyHtml(src, fallback, dest) {
+  // Older repository snapshots kept the HTML files at the project root. Prefer
+  // the site/ source when present, but fall back to the root files so builds work.
+  const source = fs.existsSync(src) ? src : fallback;
+  if (!fs.existsSync(source)) throw new Error(`Missing HTML source: ${src} (fallback: ${fallback})`);
+  let html = fs.readFileSync(source, 'utf8');
   if (pagesBase && !html.includes('<base ')) {
     html = html.replace('<head>', `<head><base href="${pagesBase}">`);
   }
   fs.writeFileSync(dest, html);
 }
-copyHtml('site/index.html', 'dist/index.html');
-copyHtml('site/login.html', 'dist/login.html');
+copyHtml('site/index.html', 'index.html', 'dist/index.html');
+copyHtml('site/login.html', 'login.html', 'dist/login.html');
 fs.copyFileSync('site/pages-auth.js', 'dist/pages-auth.js');
 fs.copyFileSync('site/auth-public.json', 'dist/auth-public.json');
 

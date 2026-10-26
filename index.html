@@ -254,7 +254,7 @@ $('tree').addEventListener('mouseover',e=>{if(matchMedia('(hover:none)').matches
  const r=c.getBoundingClientRect(),w=items.length*150+(items.length-1)*10+18,h=236;pop.style.display='flex';pop.style.left=Math.max(8,Math.min(innerWidth-w-8,r.left+r.width/2-w/2))+'px';pop.style.top=(r.top-h-8<60?r.bottom+8:r.top-h-8)+'px';pop.classList.remove('show');void pop.offsetWidth;pop.classList.add('show')});
 $('tree').addEventListener('mouseout',e=>{const c=e.target.closest('.c');if(c&&!c.contains(e.relatedTarget)){hov=null;pop.style.display='none'}});
 function hide(){$('side').style.display='none'}
-$('ed').onclick=()=>{if(!ME&&!PUBLIC){location.href='/login.html?next=/';return}if(role==='viewer'){ghDialog();return}ed=!ed;$('ed').classList.toggle('on',ed);document.querySelectorAll('.edo').forEach(e=>e.style.display=ed?'':'none');render();st(ed?'Your changes become a pull request that the admin reviews':'');if(sel&&$('side').style.display==='block')show(sel)};
+$('ed').onclick=()=>{if(!ME&&!PUBLIC){location.href='login.html?next=./';return}if(role==='viewer'){ghDialog();return}ed=!ed;$('ed').classList.toggle('on',ed);document.querySelectorAll('.edo').forEach(e=>e.style.display=ed?'':'none');render();st(ed?'Your changes become a pull request that the admin reviews':'');if(sel&&$('side').style.display==='block')show(sel)};
 $('ab').onclick=()=>{if(!mine(cur)){st('You can add only to your assigned branches');return}const k=mk(['NEW PERSON'],'blue');DATA[cur].kids.push(k);reindex();save();render();show(k);const i=document.querySelector('.nm');i&&i.select()};
 reindex();DATA.forEach(r=>r.kids.forEach(k=>open.add(k.id)));
 (function(){const cv=$('fx'),cx=cv.getContext('2d');let W,H,mx=.5,my=.4,fl=1,ft=0,T=0;
@@ -359,8 +359,8 @@ let ME=null;
 async function whoami(){try{const r=await fetch('/api/me',{cache:'no-store',credentials:'same-origin'});if(r.ok){const j=await r.json();ME=j&&j.user?j:null}}catch(x){}
  if(ME){$('out').style.display='';$('in').style.display='none';if(S('gh:for')!==ME.user){GH={user:'',token:''};S('gh:user',null);S('gh:token',null);S('gh:for',ME.user)}if(ME.github&&GH.user.toLowerCase()!==ME.github.toLowerCase()){GH={user:ME.github,token:''};S('gh:user',ME.github);S('gh:token',null)}}
  else{$('in').style.display='';$('out').style.display='none';GH={user:'',token:''};['gh:user','gh:token','gh:for'].forEach(k=>S(k,null))}return true}
-$('in').onclick=()=>{location.href='/login.html'};
-$('out').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',credentials:'same-origin'})}catch(x){}['gh:user','gh:token','gh:for'].forEach(k=>S(k,null));location.replace('/')};
+$('in').onclick=()=>{location.href='login.html'};
+$('out').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',credentials:'same-origin'})}catch(x){}['gh:user','gh:token','gh:for'].forEach(k=>S(k,null));location.replace('./')};
 
 /* ---- load the published data ---- */
 let PUBLIC=false,NOCONTACT=false;
