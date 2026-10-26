@@ -314,6 +314,8 @@ function loadDrafts(){dirtyB=[];if(!GH.user||!BR.length)return;try{const dr=JSON
 function setRole(){const ok=role==='admin'||role==='editor';
  $('who').textContent=(ME?ME.name+' · ':'')+(role==='admin'?'👑 Admin · @'+GH.user:role==='editor'?'✏️ @'+GH.user:GH.user?'👁 @'+GH.user+' (no branches assigned)':(ME||PUBLIC?'👁 View only':'👁 Public view'));
  $('gh').style.display=(ME||PUBLIC)?'':'none';$('gh').textContent=GH.user?'🔗 @'+GH.user:'🔗 Connect GitHub';
+$('in').style.display = ME ? 'none' : '';
+$('out').style.display = ME ? '' : 'none';                   
  $('sub').style.display=ok&&unsentB().length?'':'none';$('dis').style.display=ok&&dirtyB.length?'':'none';$('prs').style.display=REPO()?'':'none'}
 function save(){refreshDirty();st('Draft kept on this device — tap “Submit changes” to send it as a pull request')}
 function apply(){}
