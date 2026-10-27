@@ -1,479 +1,2128 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Family Tree</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap">
-<style>
-:root{--ink:#f1e3c4;--panel:#1f1a14;--line:#c8a45c;--bar:rgba(24,19,13,.95);--bd:#8b6b3d;--ff:Cinzel,Georgia,"Times New Roman",serif;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
-body{margin:0;font:13px/1.25 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:#06090b}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bar)}
-body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 50% 40%,transparent 30%,rgba(0,0,0,.8) 100%)}
-.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:8px 14px;background:linear-gradient(#2d241a,#17120c);border-bottom:2px solid var(--bd);box-shadow:0 3px 10px rgba(0,0,0,.45)}
-.bar input,.side input{flex:1;min-width:140px;padding:7px 10px;border:1px solid var(--bd);border-radius:8px;background:#120e09;color:var(--ink)}
-.bar button,.tabs button,.side button{padding:6px 11px;border:1px solid #b8893f;border-radius:7px;background:linear-gradient(#3a2e20,#21190f);color:#f0d9a0;cursor:pointer;font-family:var(--ff);font-weight:600;font-size:12px;letter-spacing:.03em}
-.bar button:hover,.tabs button:hover,.side button:hover{filter:brightness(1.25)}.bar .on,.tabs button.on{background:linear-gradient(#b8893f,#7c5619);color:#fff;border-color:#f0d9a0}
-.st{font-size:11.5px;color:#f0d9a0;opacity:.85}
-.leg{display:flex;gap:6px 10px;flex-wrap:wrap;padding:10px 14px 0;position:relative;z-index:2}
-.leg span{display:inline-flex;align-items:center;gap:7px;background:rgba(23,18,12,.88);color:#f0d9a0;padding:3px 10px 3px 8px;border-radius:99px;border:1px solid var(--bd);font-size:11.5px}
-.leg b{width:10px;height:10px;transform:rotate(45deg);border:1px solid #fff9;box-shadow:0 0 6px currentColor}
-.tabs{display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px;position:relative;z-index:2}
-.wrap{--u:1;overflow-x:auto;padding:10px 24px 70px;position:relative;z-index:2}.wrap.sz0{--u:.8}.wrap.sz2{--u:1.2}
-.plate{position:relative;display:inline-block;min-width:270px;padding:11px 44px;margin:0 0 18px;text-align:center;font-family:var(--ff);color:#f0d9a0;text-transform:uppercase;letter-spacing:.09em;background:linear-gradient(#2c3340,#12151b);border-radius:6px;box-shadow:inset 0 0 0 2px #0e1015,inset 0 0 0 3px #b8893f,0 0 0 2px #5b4020,0 5px 12px rgba(0,0,0,.55)}
-.plate::before,.plate::after{content:"◆";position:absolute;top:50%;margin-top:-9px;color:#d9a441;font-size:14px;text-shadow:0 0 6px #d9a441}.plate::before{left:14px}.plate::after{right:14px}
-.p1{font-weight:700;font-size:15px}.p2{font-size:13px;opacity:.9;margin-top:2px}.pi{display:block;width:100%;margin:2px 0;padding:4px 6px;text-align:center;background:#0b0d11;border:1px solid #b8893f;border-radius:5px;color:#f0d9a0;font-family:var(--ff)}
-.n{display:flex;align-items:center}.kids{position:relative;margin-left:26px;display:flex;flex-direction:column}
-.kids::before{content:"";position:absolute;left:-26px;top:50%;width:26px;height:3px;margin-top:-1px;background:var(--pc,var(--line));box-shadow:0 0 7px var(--pc,transparent);border-radius:2px}
-.kids::after{content:"";position:absolute;left:-5px;top:50%;width:10px;height:10px;margin-top:-5px;transform:rotate(45deg);background:#17120c;border:2px solid var(--pc,var(--line));box-shadow:0 0 7px var(--pc,transparent)}
-.k{position:relative;padding:5px 0 5px 26px}
-.k::before{content:"";position:absolute;left:0;top:50%;width:26px;height:3px;margin-top:-1px;background:var(--lc);box-shadow:0 0 7px var(--lc);border-radius:2px}
-.k::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--lc);box-shadow:0 0 7px var(--lc);border-radius:2px}
-.k:first-child::after{top:50%}.k:last-child::after{bottom:50%}.k:only-child::after{display:none}.kids>.k:only-child::before{left:-26px;width:52px}
-.k>.n::before{content:"";position:absolute;left:18px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:var(--er,50%);background:#17120c;border:2px solid var(--lc);box-shadow:0 0 7px var(--lc);z-index:3}
-.blue{--b:#2f9bff;--g1:#2578c8;--g2:#123e7c;--glow:#35b6ff;--lc:#35b6ff;--tx:#fff;--er:50%;--orn:"❖";--pat:repeating-radial-gradient(circle at 0 100%,transparent 0 9px,rgba(255,255,255,.12) 9px 10px)}
-.pink{--b:#ff3d9a;--g1:#d62a86;--g2:#7d1250;--glow:#ff4fa8;--lc:#ff4fa8;--tx:#fff;--er:50%;--orn:"✿";--pat:radial-gradient(rgba(255,255,255,.18) 1.5px,transparent 2px) 0 0/11px 11px}
-.green{--b:#45c452;--g1:#2f9a3a;--g2:#145019;--glow:#4ed05a;--lc:#4ed05a;--tx:#fff;--er:3px;--orn:"❦";--pat:repeating-linear-gradient(60deg,transparent 0 8px,rgba(255,255,255,.11) 8px 9px)}
-.orange{--b:#ff8a2a;--g1:#d96a1c;--g2:#7a3008;--glow:#ff8a2a;--lc:#ff8a2a;--tx:#fff;--er:50%;--orn:"✾";--pat:radial-gradient(rgba(255,255,255,.17) 1.5px,transparent 2px) 3px 3px/12px 12px}
-.purple{--b:#b05cff;--g1:#7a2fc2;--g2:#3d1068;--glow:#b05cff;--lc:#b05cff;--tx:#fff;--er:3px;--orn:"◈";--pat:repeating-linear-gradient(45deg,transparent 0 8px,rgba(255,255,255,.11) 8px 9px),repeating-linear-gradient(-45deg,transparent 0 8px,rgba(255,255,255,.11) 8px 9px)}
-.teal{--b:#22d6ff;--g1:#0ea5cc;--g2:#065070;--glow:#22d6ff;--lc:#22d6ff;--tx:#fff;--er:3px;--orn:"≋";--pat:repeating-radial-gradient(circle at 50% 100%,transparent 0 7px,rgba(255,255,255,.14) 7px 8px)}
-.yellow{--b:#ffc928;--g1:#e8b01a;--g2:#8a5d04;--glow:#ffc928;--lc:#ffc928;--tx:#2b1d05;--er:3px;--orn:"✠";--pat:repeating-linear-gradient(45deg,transparent 0 9px,rgba(80,50,0,.16) 9px 10px)}
-.c{--ring:0 0 0 2px #1a1208,0 0 0 3px var(--b);position:relative;display:flex;align-items:center;margin-left:calc(30px*var(--u));min-width:calc(200px*var(--u));max-width:calc(290px*var(--u));min-height:calc(54px*var(--u));padding:calc(7px*var(--u)) calc(34px*var(--u)) calc(7px*var(--u)) calc(34px*var(--u));border-radius:9px 14px 14px 9px;color:var(--tx);cursor:pointer;font-family:var(--ff);font-size:calc(11.5px*var(--u));font-weight:700;text-transform:uppercase;letter-spacing:.05em;text-shadow:0 1px 2px rgba(0,0,0,.55);
- border:2px solid var(--b);background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%) -200% 0/45% 100% no-repeat,var(--pat),linear-gradient(180deg,var(--g1),var(--g2));
- box-shadow:var(--ring),0 0 11px color-mix(in srgb,var(--glow) 60%,transparent),inset 0 0 0 2px rgba(255,226,160,.35),inset 0 7px 10px rgba(255,255,255,.18),inset 0 -9px 14px rgba(0,0,0,.28);transition:transform .25s,box-shadow .25s,filter .25s}
-.yellow.c{text-shadow:none}
-.c::after{content:var(--orn);position:absolute;right:calc(9px*var(--u));bottom:calc(2px*var(--u));font-size:calc(24px*var(--u));opacity:.35;pointer-events:none;text-shadow:none}
-.av{position:absolute;left:calc(-30px*var(--u));top:50%;margin-top:calc(-26px*var(--u));width:calc(52px*var(--u));height:calc(52px*var(--u));border-radius:50%;display:grid;place-items:center;font-size:calc(21px*var(--u));font-weight:700;color:#f3dca6;text-shadow:0 0 8px #d9a441;background:radial-gradient(circle at 35% 30%,#3a3a42,#0d0d11 70%);border:3px solid var(--b);box-shadow:0 0 0 3px #b8893f,0 0 0 5px #1a1208,0 0 12px var(--glow);transition:transform .45s}
-.av::before,.av::after{content:"";position:absolute;width:8px;height:8px;transform:rotate(45deg);background:var(--b);border:1px solid #fffc;box-shadow:0 0 6px var(--glow)}
-.av::before{top:-9px;left:50%;margin-left:-4px}.av::after{bottom:-9px;right:6px}
-.c .t{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1;position:relative;z-index:1}.ln{display:flex;align-items:center;gap:6px;justify-content:space-between}.ln span{overflow-wrap:anywhere}.ln+.ln{font-weight:600;opacity:.95;font-size:.94em}
-.bd{flex:none;font-family:system-ui,sans-serif;font-size:.82em;font-weight:700;padding:1px 6px;border-radius:99px;background:#5a0f1a;color:#ffd9de;border:1px solid #ff6b7d;text-shadow:none;letter-spacing:0}.bd.e{background:transparent;border:1px dashed currentColor;opacity:.7}
-.c i{position:absolute;right:8px;top:4px;font-style:normal;font-size:11px;z-index:2}
-.c.sel{box-shadow:var(--ring),0 0 0 6px rgba(255,255,255,.9),0 0 20px 6px var(--glow)}.c.hit{box-shadow:var(--ring),0 0 0 6px #e53935,0 0 18px 6px #ff7b73}
-.c:hover{z-index:4;filter:brightness(1.13);box-shadow:var(--ring),0 0 20px 3px var(--glow),inset 0 0 0 2px rgba(255,226,160,.5),inset 0 7px 10px rgba(255,255,255,.22)}.c:hover .av{transform:rotate(360deg) scale(1.08)}
-.blue.c:hover{transform:translateY(-4px);animation:pulse 1.1s infinite}
-.pink.c:hover{transform:scale(1.05);animation:shine .9s}
-.green.c:hover{animation:sway .7s ease-in-out infinite}
-.orange.c:hover{animation:flame .45s infinite alternate}
-.purple.c:hover{transform:perspective(320px) rotateY(10deg) scale(1.05)}
-.teal.c:hover{transform:translateX(5px);animation:shine 1.2s infinite}
-.yellow.c:hover{transform:scale(1.06);animation:gold 1s infinite,shine .8s infinite}
-@keyframes shine{from{background-position:-200% 0,0 0,0 0}to{background-position:300% 0,0 0,0 0}}
-@keyframes pulse{0%,100%{box-shadow:var(--ring),0 0 9px var(--glow)}50%{box-shadow:var(--ring),0 0 24px 5px var(--glow)}}
-@keyframes sway{0%,100%{transform:rotate(-1.8deg) scale(1.03)}50%{transform:rotate(1.8deg) scale(1.03)}}
-@keyframes flame{0%{box-shadow:var(--ring),0 0 9px var(--glow);transform:translateY(-1px) scale(1.03)}100%{box-shadow:var(--ring),0 0 24px 4px #ffb24a;transform:translateY(-3px) scale(1.05)}}
-@keyframes gold{0%,100%{box-shadow:var(--ring),0 0 11px var(--glow)}50%{box-shadow:var(--ring),0 0 28px 6px #ffe07a}}
-@media(prefers-reduced-motion:reduce){.c,.c *{animation:none!important;transition:none!important}}
-.tg{width:20px;height:20px;margin-left:8px;border:2px solid var(--lc);border-radius:50%;background:#17120c;color:#fff;font-size:12px;line-height:14px;padding:0;cursor:pointer;flex:none;box-shadow:0 0 6px var(--lc)}
-.side{position:fixed;right:0;bottom:0;width:min(350px,100%);max-height:62vh;overflow:auto;background:linear-gradient(#2a2015,#17120c);color:var(--ink);border:2px solid #b8893f;border-radius:14px 14px 0 0;padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 16px rgba(0,0,0,.5);display:none;z-index:6}
-.side h3{margin:0 0 4px;font:700 16px var(--ff);color:#f0d9a0}.side .m{opacity:.8;margin:3px 0}.side a{color:#8ec9ff;word-break:break-all}
-.side select{width:100%;padding:6px;border-radius:8px;border:1px solid var(--bd);background:#120e09;color:var(--ink)}.r{display:flex;gap:6px;align-items:center}.r input{flex:1;min-width:0}.r select{width:auto;flex:none}.dn{color:#ff8a8a!important}
-.x{float:right;border:0!important;background:none!important;color:var(--ink)!important;font-size:18px!important;padding:0 4px!important}
-/* ---- DARK cinematic theme ---- */
-#fx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
-#spot{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(circle 340px at var(--mx,50%) var(--my,40%),rgba(150,205,225,.10),transparent 70%)}
-#flash{position:fixed;inset:0;pointer-events:none;z-index:7;background:#cfe9f0;opacity:0}#flash.go{animation:flash .55s}
-@keyframes flash{0%{opacity:.55}15%{opacity:.05}30%{opacity:.35}100%{opacity:0}}
-.warp{animation:warp .75s}
-@keyframes warp{0%{opacity:0;filter:blur(10px) hue-rotate(50deg) brightness(2);transform:scale(1.03)}30%{opacity:.8;filter:blur(2px) hue-rotate(-25deg);transform:translateX(-7px)}50%{opacity:.5;transform:translateX(6px) skewX(2deg)}70%{opacity:1;transform:translateX(-2px)}100%{opacity:1;filter:none;transform:none}}
-.c{filter:brightness(.9) saturate(.9)}
-.c:hover .t{animation:glitch .45s steps(2) 1}.c:hover .av{animation:jit .3s steps(2) 2}
-@keyframes glitch{0%,100%{text-shadow:none;transform:none}20%{text-shadow:2px 0 #ff2d55,-2px 0 #2de2ff;transform:translateX(-1px)}40%{text-shadow:-2px 0 #ff2d55,2px 0 #2de2ff;transform:translateX(1px)}60%{text-shadow:1px 0 #ff2d55,-1px 0 #2de2ff}80%{text-shadow:none;transform:translateY(-1px)}}
-@keyframes jit{50%{filter:hue-rotate(60deg) brightness(1.4);transform:translate(1px,-1px)}}
-.p1{animation:ptg 7s infinite}
-@keyframes ptg{0%,93%,100%{text-shadow:0 0 8px rgba(240,217,160,.35);transform:none}94%{text-shadow:3px 0 #ff2d55,-3px 0 #2de2ff;transform:translateX(-2px)}96%{text-shadow:-3px 0 #ff2d55,3px 0 #2de2ff;transform:translateX(2px) skewX(-6deg)}98%{text-shadow:1px 0 #ff2d55,-1px 0 #2de2ff}}
-.plate{animation:flick 9s infinite}@keyframes flick{0%,90%,100%{filter:none}91%{filter:brightness(.55)}92%{filter:brightness(1.3)}93%{filter:brightness(.7)}94%{filter:none}}
-/* energy flowing along the threads */
-.k::before,.kids::before{background:linear-gradient(90deg,var(--lc,var(--pc)) 30%,#fff 50%,var(--lc,var(--pc)) 70%) 0 0/300% 100%;animation:fx 3.4s linear infinite}
-.kids::before{background:linear-gradient(90deg,var(--pc,var(--line)) 30%,#fff 50%,var(--pc,var(--line)) 70%) 0 0/300% 100%}
-.k::after{background:linear-gradient(180deg,var(--lc) 30%,#fff 50%,var(--lc) 70%) 0 0/100% 300%;animation:fy 4s linear infinite}
-@keyframes fx{from{background-position:100% 0}to{background-position:-100% 0}}@keyframes fy{from{background-position:0 100%}to{background-position:0 -100%}}
-@media(prefers-reduced-motion:reduce){.k::before,.k::after,.kids::before,.p1,.plate,.warp,#flash{animation:none!important}}
+<!DOCTYPE html>
+<html lang="en">
 
-.ln.dead{color:#9a9ca2!important;text-shadow:none;opacity:.85}.dd{font-style:normal;font-size:.8em;opacity:.9;letter-spacing:0}
-.c.dead2{--g1:#171719;--g2:#050506;--pat:none;--b:#3b3b41;--glow:#55555d;--tx:#8d8f95}.c.dead2 .av{color:#8d8f95;text-shadow:none}.c.dead2::after{opacity:.12}
-#pop{position:fixed;z-index:8;display:none;pointer-events:none;gap:10px;padding:8px;border-radius:12px;background:rgba(10,12,14,.3);border:1px solid rgba(240,217,160,.4)}
-#pop.show{animation:popin .22s}@keyframes popin{from{opacity:0;transform:translateY(8px) scale(.94)}to{opacity:1;transform:none}}
-#pop figure{margin:0;width:150px;text-align:center}#pop img{display:block;width:150px;height:190px;object-fit:cover;border-radius:8px;opacity:.5;background:#0a0c0e;box-shadow:0 0 20px rgba(0,0,0,.6)}
-#pop figcaption{font:600 10.5px Cinzel,Georgia,serif;color:#f0d9a0;margin-top:5px;text-transform:uppercase;opacity:.8}
-.ph{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}.ph figure{margin:0;width:90px;text-align:center;font-size:10px}.ph img{width:90px;height:110px;object-fit:cover;border-radius:6px;border:1px solid var(--bd);background:#120e09}
-.pp{border-top:1px solid var(--bd);padding-top:6px;margin-top:6px}.ck{display:flex;align-items:center;gap:4px;white-space:nowrap}.r .ck input{flex:none;width:auto;min-width:0}img.th{width:34px;height:34px;object-fit:cover;border-radius:6px;border:1px solid var(--bd)}
-@media(prefers-reduced-motion:reduce){#pop.show{animation:none}}
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Family Tree</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap">
+  <style>
+    :root {
+      --ink: #f1e3c4;
+      --panel: #1f1a14;
+      --line: #c8a45c;
+      --bar: rgba(24, 19, 13, .95);
+      --bd: #8b6b3d;
+      --ff: Cinzel, Georgia, "Times New Roman", serif;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px)
+    }
 
-#banners{display:flex;gap:10px;padding:18px 8px;margin:-18px -8px 24px;overflow-x:auto}
-#banners .plate{flex:1 0 150px;min-width:150px;padding:9px 26px;margin:0;cursor:pointer;transition:filter .45s,opacity .45s,transform .45s,box-shadow .45s;animation:none}
-#banners .plate::before{left:9px}#banners .plate::after{right:9px}.p1{font-size:13px}.p2{font-size:11.5px}
-#banners .plate:not(.on){filter:grayscale(.85) brightness(.5);opacity:.75;transform:scale(.94)}#banners .plate:not(.on):hover{filter:grayscale(.35) brightness(.85);opacity:1}
-#banners .plate:not(.on) .p1{animation:none}
-#banners .plate.on{cursor:default;transform:scale(1.03);box-shadow:inset 0 0 0 2px #0e1015,inset 0 0 0 3px #f0d9a0,0 0 0 2px #b8893f,0 0 24px 5px rgba(240,200,110,.55);animation:flick 9s infinite}
-#dv,#dh{position:absolute;display:block;pointer-events:none;z-index:2;border-radius:2px;background:#f0d9a0;box-shadow:0 0 8px #f0d9a0,0 0 18px rgba(240,200,110,.6)}
-#dv{width:3px}#dh{height:3px}
-#dv.go{animation:dvg .45s both}#dh.go{animation:dhg .5s .4s both}
-@keyframes dvg{from{transform:scaleY(0);transform-origin:top}to{transform:scaleY(1);transform-origin:top}}
-@keyframes dhg{from{transform:scaleX(0);transform-origin:right}to{transform:scaleX(1);transform-origin:right}}
-.kids.top::before,.kids.top::after{display:none}.kids.top>.k:first-child::after{top:0}
-.kids.top>.k:only-child::after{display:block;top:0;bottom:50%}.kids.top>.k:only-child::before{left:0;width:26px}
-#tree.enter .k{animation:kin .55s both;animation-delay:calc(.85s + var(--i,0)*var(--st,40ms))}
-@keyframes kin{from{opacity:0;filter:blur(6px) brightness(2.2)}to{opacity:1;filter:none}}
-@media(prefers-reduced-motion:reduce){#tree.enter .k,#dv.go,#dh.go{animation:none!important}}
+    html {
+      scroll-padding-top: env(safe-area-inset-top, 0px)
+    }
 
-@media (max-width:720px){
- html,body{overflow-x:hidden}
- .bar{padding:6px 8px;gap:6px}.bar input{min-width:100px;padding:6px 8px;font-size:14px}.bar button{padding:6px 9px;font-size:11px}
- .leg{flex-wrap:nowrap;overflow-x:auto;padding:8px 8px 0;scrollbar-width:none}.leg::-webkit-scrollbar{display:none}.leg span{white-space:nowrap;flex:none}
- #banners{scroll-snap-type:x mandatory;gap:8px;padding:14px 8px;margin:-14px -4px 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}#banners::-webkit-scrollbar{display:none}
- #banners .plate{flex:0 0 138px;min-width:138px;scroll-snap-align:center;padding:8px 18px}
- .wrap{--u:.82;padding:8px 8px 100px;overflow-x:hidden}.wrap.sz0{--u:.7}.wrap.sz2{--u:.95}
- .c{font-size:10.5px;letter-spacing:.02em}
- .n{flex-wrap:wrap}.n>.c{min-width:0;max-width:calc(100% - 40px)}
- .n>.kids{flex:0 0 auto;width:calc(100% - 26px*var(--u));margin-left:calc(26px*var(--u));margin-top:2px}.kids.top{margin-top:0;width:auto}
- .kids::before,.kids::after{display:none}
- .k{padding-left:14px;--cy:calc(5px + 27px*var(--u))}
- .k::before{width:14px;top:var(--cy)}.k>.n::before{left:7px;top:var(--cy)}
- .k::after,.k:first-child::after,.kids.top>.k:first-child::after{top:0;bottom:0}
- .k:last-child::after{bottom:auto;height:calc(var(--cy) + 2px)}
- .k:only-child::after,.kids.top>.k:only-child::after{display:block;top:0;bottom:auto;height:calc(var(--cy) + 2px)}
- .kids>.k:only-child::before,.kids.top>.k:only-child::before{left:0;width:14px}
- .tg{width:28px;height:28px;margin-left:6px;font-size:16px;line-height:22px}
- .side{max-height:68vh}
-}
+    * {
+      box-sizing: border-box
+    }
 
-/* readable passed-away names */
-.ln.dead{color:#d6d9df!important;opacity:1;text-shadow:none}
-.ln.dead>span{background:rgba(8,9,12,.55);color:#d9dce2;padding:1px 7px;border-radius:6px;text-shadow:none}
-.ln.dead .dd{color:#eceef2;opacity:1}
-.c.dead2{--tx:#c9ccd3}.c.dead2 .av{color:#c6c9d0}.c.dead2 .ln.dead>span{background:none;padding:0}
-@media (max-width:720px){
- .wrap{--u:1;--ch:50px;--av:38px;--kp:10px;padding:10px 12px 120px}
- .wrap.sz0{--ch:44px;--av:33px;--kp:8px}.wrap.sz2{--ch:58px;--av:44px;--kp:12px}
- .c{--ring:0 0 0 1px #14100a,0 0 0 2px var(--b);min-height:var(--ch);margin-left:calc(var(--av)*.45);padding:7px 24px 7px calc(var(--av)*.55 + 10px);border-width:1.5px;font-size:11px;letter-spacing:.03em;line-height:1.3;border-radius:8px 12px 12px 8px;
-  box-shadow:var(--ring),0 0 7px color-mix(in srgb,var(--glow) 38%,transparent),inset 0 0 0 1px rgba(255,226,160,.26),inset 0 5px 8px rgba(255,255,255,.1)}
- .c.sel{box-shadow:var(--ring),0 0 0 4px rgba(255,255,255,.9),0 0 16px 4px var(--glow)}
- .c::after{font-size:18px;right:7px;bottom:1px;opacity:.2}
- .av{width:var(--av);height:var(--av);top:calc(var(--ch)/2);margin-top:calc(var(--av)/-2);left:calc(var(--av)*-.45);font-size:15px;border-width:2px;box-shadow:0 0 0 2px #b8893f,0 0 7px var(--glow)}
- .av::before,.av::after{width:6px;height:6px}.av::before{top:-6px;margin-left:-3px}.av::after{bottom:-6px;right:5px}
- .c .t{gap:4px}.ln+.ln{font-size:.97em}
- .n{align-items:flex-start}.n>.c{max-width:calc(100% - 44px)}
- .n>.kids{width:calc(100% - var(--av)/2);margin-left:calc(var(--av)/2);margin-top:6px}.kids.top{margin-top:0;width:auto}
- .k{padding:var(--kp) 0 var(--kp) 16px;--cy:calc(var(--kp) + var(--ch)/2)}
- .k::before{width:16px;height:2px;top:var(--cy)}.k::after{width:2px}
- .k>.n::before{left:9px;width:8px;height:8px;margin-top:-4px;top:var(--cy)}
- .k:last-child::after,.k:only-child::after,.kids.top>.k:only-child::after{height:calc(var(--cy) + 1px)}
- .kids>.k:only-child::before,.kids.top>.k:only-child::before{width:16px}
- .tg{margin:calc(var(--ch)/2 - 14px) 0 0 6px}
- .ln{gap:8px}.bd{font-size:.85em}
-}
+    body {
+      margin: 0;
+      font: 13px/1.25 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: var(--ink);
+      background: #06090b
+    }
 
-#modal{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.65);padding:14px}
-.mb{width:min(560px,100%);max-height:86vh;overflow:auto;background:linear-gradient(#2a2015,#17120c);border:2px solid #b8893f;border-radius:14px;padding:14px 16px;color:var(--ink)}
-.mb h3{margin:0 0 6px;font:700 17px var(--ff);color:#f0d9a0}.mb .m{opacity:.8;margin:4px 0}.mb input,.mb textarea,.side textarea{width:100%;padding:7px 9px;margin:4px 0;border:1px solid var(--bd);border-radius:8px;background:#120e09;color:var(--ink);font:inherit}
-.mb button{padding:7px 12px;border:1px solid #b8893f;border-radius:7px;background:linear-gradient(#3a2e20,#21190f);color:#f0d9a0;cursor:pointer;font-family:var(--ff);font-weight:600;margin:6px 6px 0 0}.mb button:disabled{opacity:.35;cursor:not-allowed}
-.dl{max-height:190px;overflow:auto;font-size:12px;background:#120e09;border:1px solid var(--bd);border-radius:8px;padding:6px 9px;margin:6px 0}.dl div{padding:1px 0}
-.warn{color:#ffb26b;font-size:12px;margin:4px 0}.bl{flex:0 0 38%;font-size:12px}.mb .r input{margin:3px 0}
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0 0 auto;
+      height: env(safe-area-inset-top, 0px);
+      z-index: 10;
+      background: var(--bar)
+    }
 
-.nocontact .bd.e{display:none}
-.mb a.btn{display:inline-block;padding:7px 12px;border:1px solid #b8893f;border-radius:7px;background:linear-gradient(#3a2e20,#21190f);color:#f0d9a0;text-decoration:none;font:600 13px var(--ff);margin:6px 6px 0 0}
-.mb .r{flex-wrap:wrap}
-</style></head><body><canvas id="fx"></canvas><div id="spot"></div><div id="flash"></div><div id="pop"></div><div id="modal"><div class="mb"><button class="x" id="mx">×</button><div id="mc"></div></div></div>
-<div class="bar"><input id="q" type="search" placeholder="Search a name…"><button id="ea">Expand all</button><button id="ca">Collapse</button><button id="sz" title="Card size">Aa Size</button><button id="ed">✏️ Edit</button><button id="ab" class="edo" style="display:none">+ Add to branch</button><button id="sub" style="display:none">📤 Submit changes</button><button id="dis" style="display:none">↩ Discard my changes</button><button id="gh">🔗 Connect GitHub</button><button id="prs" style="display:none">📬 Requests</button><button id="in" style="display:none">🔑 Sign in</button><button id="out" style="display:none">Sign out</button><span class="st" id="who"></span><span class="st" id="st"></span></div>
-<div class="leg" id="leg"></div><div class="wrap" id="wrap"><div id="banners"></div><i id="dv"></i><i id="dh"></i><div id="tree"></div></div>
-<div class="side" id="side"></div>
-<script>
-let DATA=[];
-const GEN={blue:['Sky blue','Main family couple (1st generation)','#29abe2'],green:['Green','2nd generation','#006d46'],orange:['Orange','3rd generation','#d44d00'],purple:['Velvet','4th generation','#a45cf0'],teal:['Cyan','5th generation','#00a39e'],pink:['Pink','Female who married','#ff4fa8'],yellow:['Yellow','Pastor / nun','#ffce00']};
-const RK=['blue','green','orange','purple','teal'];
-const LINKS={}; // optional fixed links: LINKS["NAME"]="https://…"
-const $=id=>document.getElementById(id);
-const S=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}};
-const E=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
-const PH={},NEWPH={};
-let role='viewer',BR=[],dirtyB=[],SENT={},ACCESS=null,META=[],GH={user:S('gh:user')||'',token:S('gh:token')||''},LIVEJ='[]',loaded=false;
-let cur=0,sel=null,ed=false,P=new Map(),open=new Set(),hits=new Set(),lastJ='',tm=null;
-$('leg').innerHTML=Object.values(GEN).map(g=>'<span><b style="background:'+g[2]+'"></b>'+g[0]+' = '+g[1]+'</span>').join('')+'<span>✝ Grey name = passed away</span><span><b style="background:#000;color:#777"></b>Black slot = couple both passed away</span>';
-const dead=(n,i)=>typeof (n.dd||[])[i]==='string';
-const BGO=['','A+','A−','B+','B−','AB+','AB−','O+','O−'];
-function getPh(pid){return Promise.resolve(PH[pid]||('photos/'+pid+'.jpg'))}
-function pick(n,i){const f=document.createElement('input');f.type='file';f.accept='image/*';f.onchange=()=>{const file=f.files[0];if(!file)return;const img=new Image(),u=URL.createObjectURL(file);
- img.onload=()=>{const s=Math.min(1,320/Math.max(img.width,img.height)),cv=document.createElement('canvas');cv.width=Math.round(img.width*s);cv.height=Math.round(img.height*s);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(u);
-  const d=cv.toDataURL('image/jpeg',.72),pid='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);PH[pid]=d;NEWPH[pid]=d;
-  n.ph=n.ph||[];n.ph[i]=pid;ch(n)};img.src=u};f.click()}
-function reindex(){P=new Map();DATA.forEach(r=>(function f(n,p){P.set(n.id,{n,p});n.kids.forEach(k=>f(k,n))})(r,null))}
-const cnt=n=>n.kids.reduce((a,k)=>a+1+cnt(k),0);
-function path(id){const a=[];let e=P.get(id);while(e&&e.p){e=P.get(e.p.id);if(e&&e.n.names.length&&e.p)a.unshift(e.n.names[0])}return a}
-let IDX=0;function node(n,vis=true){const k=document.createElement('div');k.className='k '+n.c;if(vis)k.style.setProperty('--i',IDX++);const row=document.createElement('div');row.className='n';
- const c=document.createElement('div');c.className='c '+n.c+(hits.has(n.id)?' hit':'')+(sel&&sel.id===n.id?' sel':'');c.dataset.id=n.id;
- c.innerHTML='<span class="av">'+E((n.names[0]||'?').trim().charAt(0))+'</span><div class="t">'+n.names.map((x,i)=>{const b=(n.bg||[])[i],d=dead(n,i);return '<div class="ln'+(d?' dead':'')+'"><span>'+E(x)+(d?'<em class="dd"> ✝'+(n.dd[i]?' '+E(n.dd[i]):'')+'</em>':'')+'</span>'+(b?'<b class="bd">🩸 '+E(b)+'</b>':(ed?'<b class="bd e">🩸</b>':''))+'</div>'}).join('')+'</div>'+icons(n);
- if(n.names.length>1&&n.names.every((x,i)=>dead(n,i)))c.classList.add('dead2');
- c.onclick=()=>show(n);row.appendChild(c);
- if(n.kids.length){const o=open.has(n.id),t=document.createElement('button');t.className='tg';t.textContent=o?'−':'+';row.appendChild(t);
-  const ks=document.createElement('div');ks.className='kids';ks.style.setProperty('--pc',({blue:'#35b6ff',pink:'#ff4fa8',green:'#4ed05a',orange:'#ff8a2a',purple:'#b05cff',teal:'#22d6ff',yellow:'#ffc928'})[n.c]);if(!o)ks.style.display='none';n.kids.forEach(x=>ks.appendChild(node(x,vis&&o)));row.appendChild(ks);
-  t.onclick=()=>{const o2=ks.style.display==='none';ks.style.display=o2?'':'none';t.textContent=o2?'−':'+';o2?open.add(n.id):open.delete(n.id)}}
- k.appendChild(row);return k}
-let ET=null,STEP=40;
-function render(){$('pop').style.display='none';const w=$('wrap'),sx=w.scrollLeft,sy=window.scrollY;banners();const t=$('tree');t.innerHTML='';IDX=0;if(!DATA.length){t.innerHTML='<div class="m" style="padding:30px 6px">Loading the family tree…</div>';return}const r=DATA[cur];
- const h=document.createElement('div');h.className='kids top';h.style.margin='0';r.kids.forEach(x=>h.appendChild(node(x,true)));t.appendChild(h);
- STEP=Math.max(14,Math.min(60,2400/Math.max(IDX,1)));t.style.setProperty('--st',STEP+'ms');w.scrollLeft=sx;window.scrollTo(window.scrollX,sy);place()}
-function banners(){const b=$('banners');b.innerHTML='';DATA.forEach((r,i)=>{const p=document.createElement('div');p.className='plate'+(i===cur?' on':'');
- if(i===cur&&ed&&role==='admin'){p.innerHTML='<input class="pi" data-k="0" value="'+E(r.names[0])+'"><input class="pi" data-k="1" value="'+E(r.names[1]||'')+'">';p.querySelectorAll('.pi').forEach(inp=>inp.onchange=()=>{r.names[+inp.dataset.k]=inp.value.trim();save();banners();place()})}
- else p.innerHTML='<div class="p1">'+E(r.names[0])+'</div><div class="p2">'+E(r.names[1]||'')+'</div>';
- if(i!==cur){p.title='Open this branch';p.onclick=()=>{cur=i;render();hide();window.warp&&warp();enter();const on=document.querySelector('#banners .plate.on');on&&on.scrollIntoView({inline:'center',block:'nearest'});place()}}
- b.appendChild(p)})}
-function place(){const w=$('wrap'),p=document.querySelector('#banners .plate.on');if(!p)return;const wr=w.getBoundingClientRect(),pr=p.getBoundingClientRect(),tr=$('tree').getBoundingClientRect();
- const cx=pr.left+pr.width/2-wr.left+w.scrollLeft-1.5,pb=pr.bottom-wr.top+w.scrollTop,tt=tr.top-wr.top+w.scrollTop,tl=tr.left-wr.left+w.scrollLeft,dv=$('dv'),dh=$('dh');
- dv.style.cssText='left:'+cx+'px;top:'+(pb-2)+'px;height:'+Math.max(0,tt-pb+2)+'px';const wd=cx+3-tl;dh.style.cssText='left:'+tl+'px;top:'+(tt-4)+'px;width:'+Math.max(0,wd)+'px;display:'+(wd>0?'block':'none')}
-function enter(){const t=$('tree');t.classList.remove('enter');void t.offsetWidth;t.classList.add('enter');['dv','dh'].forEach(i=>{const d=$(i);d.classList.remove('go');void d.offsetWidth;d.classList.add('go')});clearTimeout(ET);ET=setTimeout(()=>t.classList.remove('enter'),850+IDX*STEP+700)}
-function setAll(o){open.clear();if(o)P.forEach(({n},id)=>{if(n.kids.length)open.add(id)});render()}
-let sz=1;$('sz').onclick=()=>{sz=(sz+1)%3;document.querySelector('.wrap').className='wrap sz'+sz};
-$('ea').onclick=()=>setAll(true);$('ca').onclick=()=>setAll(false);
-$('q').oninput=ev=>{const v=ev.target.value.trim().toUpperCase();hits=new Set();
- if(v.length>=2){let first=null;P.forEach(({n},id)=>{if(n.names.join(' ').toUpperCase().includes(v)){hits.add(id);if(first===null)first=id}});
-  hits.forEach(id=>{let e=P.get(id);while(e&&e.p){open.add(e.p.id);e=P.get(e.p.id)}});
-  if(first){let e=P.get(first);while(e.p)e=P.get(e.p.id);cur=DATA.indexOf(e.n)}}
- render();const h=document.querySelector('.c.hit');h&&h.scrollIntoView({block:'center',inline:'center'})};
-function st(t){$('st').textContent=t}
-function mk(names,c){return{id:'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),names,c,kids:[]}}
-function ch(n){reindex();save();render();show(n)}
-function show(n){sel=n;document.querySelectorAll('.c.sel').forEach(e=>e.classList.remove('sel'));const ce=document.querySelector('.c[data-id="'+n.id+'"]');ce&&ce.classList.add('sel');const s=$('side'),pth=path(n.id);let h='<button class="x" onclick="hide()">×</button>';
- const em=ed&&canEditNode(n);if(!em){h+='<h3>'+n.names.map(E).join(' &amp; ')+'</h3><div class="m">'+(GEN[n.c]?GEN[n.c][1]+'<br>':'')+(pth.length?'Line: '+pth.map(E).join(' → ')+'<br>':'')+(n.bg&&n.bg.some(Boolean)?'Blood group: '+n.names.map((x,i)=>n.bg[i]?E(x)+' — '+E(n.bg[i]):'').filter(Boolean).join(' · ')+'<br>':'')+(n.dd&&n.dd.some(x=>typeof x==='string')?'✝ Passed away: '+n.names.map((x,i)=>dead(n,i)?E(x)+(n.dd[i]?' — '+E(n.dd[i]):''):'').filter(Boolean).join(' · ')+'<br>':'')+(n.kids.length?'Descendants shown: '+cnt(n)+' · Children boxes: '+n.kids.length:'No children listed')+'</div>'+(n.kids.length?'<div class="m">'+n.kids.map(x=>E(x.names.join(' & '))).join(' · ')+'</div>':'')+(ME||PUBLIC?'':'<div class="m">🔒 Phone, address and blood group are shown to signed-in family members.</div>')+'<div class="ph" id="vph"></div>';
-  h+=contact(n);const l=n.link||LINKS[n.names[0]]||'';h+=/^https?:/.test(l)?'<div class="m"><a href="'+E(l)+'" target="_blank" rel="noopener">Open link</a></div>':(ed&&!em?'<div class="warn">You can edit only your assigned branches ('+E(BR.map(b=>DATA[b]?DATA[b].names[0]:'').join(', '))+').</div>':'<div class="m">Tap ✏️ Edit to rename people, add a link, phone, address, blood group, or family members.</div>')}
- else{h+='<h3>Edit member</h3>'+n.names.map((x,i)=>'<div class="pp"><div class="r"><input class="nm" data-i="'+i+'" value="'+E(x)+'" placeholder="'+(i?'Spouse / partner':'Name')+'"><select class="bgs" data-i="'+i+'" title="Blood group">'+BGO.map(g=>'<option value="'+g+'"'+(g===((n.bg||[])[i]||'')?' selected':'')+'>'+(g?'🩸 '+g:'🩸 —')+'</option>').join('')+'</select>'+(n.names.length>1?'<button data-rm="'+i+'">×</button>':'')+'</div><div class="r"><label class="ck"><input type="checkbox" class="dc" data-i="'+i+'"'+(dead(n,i)?' checked':'')+'> ✝ Passed away</label><input class="dt" data-i="'+i+'" placeholder="Year or date" value="'+E(dead(n,i)?(n.dd[i]||''):'')+'"'+(dead(n,i)?'':' disabled')+'></div><div class="r"><button class="up" data-i="'+i+'">📷 '+((n.ph||[])[i]?'Change':'Add')+' photo</button>'+((n.ph||[])[i]?'<button class="rp" data-i="'+i+'">Remove</button><img class="th" alt="" data-pid="'+n.ph[i]+'">':'')+'</div></div>').join('')
-  +'<button id="an">+ Spouse / name line</button><div class="m">Category</div><select id="cat">'+Object.keys(GEN).map(k=>'<option value="'+k+'"'+(k===n.c?' selected':'')+'>'+GEN[k][0]+' — '+GEN[k][1]+'</option>').join('')+'</select><div class="m">Link</div><input id="lk" value="'+E(n.link||'')+'" placeholder="https://… (photo, profile, document)"><div class="m">📞 Phone number</div><input id="tel" type="tel" value="'+E(n.tel||'')+'" placeholder="+91 …"><div class="m">📍 Address</div><textarea id="addr" rows="2" placeholder="House, street, town">'+E(n.addr||'')+'</textarea><div class="r"><button id="ac">+ Add child</button><button id="dl" class="dn">Delete</button></div>'}
- s.innerHTML=h;s.style.display='block';
- if(NOCONTACT)s.querySelectorAll('#tel,#addr,.bgs').forEach(e=>{const p=e.previousElementSibling;e.style.display='none';if(p&&p.classList.contains('m'))p.style.display='none'});
- if(!em){const v=$('vph');(n.ph||[]).forEach((p,i)=>{if(!p)return;const f=document.createElement('figure');f.innerHTML='<img alt=""><figcaption>'+E(n.names[i])+'</figcaption>';v.appendChild(f);getPh(p).then(u=>{if(u)f.firstChild.src=u})});return}
- s.querySelectorAll('.nm').forEach(i=>i.onchange=()=>{n.names[+i.dataset.i]=i.value.trim()||'?';ch(n)});
- s.querySelectorAll('.bgs').forEach(i=>i.onchange=()=>{n.bg=n.bg||[];n.bg[+i.dataset.i]=i.value;ch(n)});
- s.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{const i=+b.dataset.rm;n.names.splice(i,1);n.bg&&n.bg.splice(i,1);n.dd&&n.dd.splice(i,1);n.ph&&n.ph.splice(i,1);ch(n)});
- s.querySelectorAll('.dc').forEach(c=>c.onchange=()=>{n.dd=n.dd||[];n.dd[+c.dataset.i]=c.checked?'':null;ch(n)});
- s.querySelectorAll('.dt').forEach(c=>c.onchange=()=>{n.dd=n.dd||[];n.dd[+c.dataset.i]=c.value.trim();ch(n)});
- s.querySelectorAll('.up').forEach(b=>b.onclick=()=>pick(n,+b.dataset.i));
- s.querySelectorAll('.rp').forEach(b=>b.onclick=()=>{n.ph[+b.dataset.i]=null;ch(n)});
- s.querySelectorAll('img.th').forEach(im=>getPh(im.dataset.pid).then(u=>{if(u)im.src=u}));
- $('an').onclick=()=>{n.names.push('NEW NAME');ch(n)};$('cat').onchange=ev=>{n.c=ev.target.value;ch(n)};$('lk').onchange=ev=>{n.link=ev.target.value.trim();ch(n)};$('tel').onchange=ev=>{n.tel=ev.target.value.trim();ch(n)};$('addr').onchange=ev=>{n.addr=ev.target.value.trim();ch(n)};
- $('ac').onclick=()=>{const r=RK.indexOf(n.c),k=mk(['NEW PERSON'],r>=0?RK[Math.min(r+1,4)]:'pink');n.kids.push(k);open.add(n.id);reindex();save();render();show(k);const i=document.querySelector('.nm');i&&i.select()};
- $('dl').onclick=function(){if(this.dataset.s!=='1'){this.dataset.s='1';this.textContent='Tap again to confirm';return}const pe=P.get(n.id);pe.p.kids.splice(pe.p.kids.indexOf(n),1);sel=null;reindex();save();render();hide()}}
-let hov=null;const pop=$('pop');
-$('tree').addEventListener('mouseover',e=>{if(matchMedia('(hover:none)').matches)return;const c=e.target.closest('.c');if(!c||c===hov)return;hov=c;const pe=P.get(c.dataset.id);if(!pe)return;const n=pe.n,items=(n.ph||[]).map((p,i)=>p?{p,name:n.names[i]}:null).filter(Boolean);if(!items.length){pop.style.display='none';return}
- pop.innerHTML=items.map(()=>'<figure><img alt=""><figcaption></figcaption></figure>').join('');items.forEach((it,i)=>{const f=pop.children[i];f.lastChild.textContent=it.name;getPh(it.p).then(u=>{if(u&&hov===c)f.firstChild.src=u})});
- const r=c.getBoundingClientRect(),w=items.length*150+(items.length-1)*10+18,h=236;pop.style.display='flex';pop.style.left=Math.max(8,Math.min(innerWidth-w-8,r.left+r.width/2-w/2))+'px';pop.style.top=(r.top-h-8<60?r.bottom+8:r.top-h-8)+'px';pop.classList.remove('show');void pop.offsetWidth;pop.classList.add('show')});
-$('tree').addEventListener('mouseout',e=>{const c=e.target.closest('.c');if(c&&!c.contains(e.relatedTarget)){hov=null;pop.style.display='none'}});
-function hide(){$('side').style.display='none'}
-$('ed').onclick=()=>{if(!ME&&!PUBLIC){location.href='/login.html?next=/';return}if(role==='viewer'){ghDialog();return}ed=!ed;$('ed').classList.toggle('on',ed);document.querySelectorAll('.edo').forEach(e=>e.style.display=ed?'':'none');render();st(ed?'Your changes become a pull request that the admin reviews':'');if(sel&&$('side').style.display==='block')show(sel)};
-$('ab').onclick=()=>{if(!mine(cur)){st('You can add only to your assigned branches');return}const k=mk(['NEW PERSON'],'blue');DATA[cur].kids.push(k);reindex();save();render();show(k);const i=document.querySelector('.nm');i&&i.select()};
-reindex();DATA.forEach(r=>r.kids.forEach(k=>open.add(k.id)));
-(function(){const cv=$('fx'),cx=cv.getContext('2d');let W,H,mx=.5,my=.4,fl=1,ft=0,T=0;
-const rm=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const nz=document.createElement('canvas');nz.width=nz.height=160;const nx=nz.getContext('2d');
-function noise(){const id=nx.createImageData(160,160),d=id.data;for(let i=0;i<d.length;i+=4){const v=Math.random()*255;d[i]=d[i+1]=d[i+2]=v;d[i+3]=255}nx.putImageData(id,0,0)}
-noise();const P=[];
-function size(){W=cv.width=innerWidth;H=cv.height=innerHeight;P.length=0;const n=Math.min(90,Math.floor(W*H/16000));for(let i=0;i<n;i++)P.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.4,s:Math.random()*.25+.05,p:Math.random()*6.28,z:Math.random()})}
-addEventListener('resize',size);size();
-addEventListener('pointermove',e=>{mx=e.clientX/W;my=e.clientY/H;const r=document.documentElement.style;r.setProperty('--mx',e.clientX+'px');r.setProperty('--my',e.clientY+'px')},{passive:true});
-let gn=-1,run=false;
-function frame(t){T=t/1000;
- if(t>ft){fl=Math.random()<.18?.35+Math.random()*.4:1;ft=t+(fl<1?40+Math.random()*80:600+Math.random()*3200)}
- const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b1317');g.addColorStop(.6,'#070b0e');g.addColorStop(1,'#040607');
- cx.globalAlpha=1;cx.globalCompositeOperation='source-over';cx.fillStyle=g;cx.fillRect(0,0,W,H);
- cx.save();cx.globalCompositeOperation='lighter';
- const bx=W*(.5+.08*Math.sin(T*.15)+(mx-.5)*.06);
- for(let i=0;i<3;i++){const x0=bx+(i-1)*W*.18,sw=Math.sin(T*.2+i)*W*.03;const gr=cx.createLinearGradient(x0,0,x0+sw,H*.9);gr.addColorStop(0,'rgba(140,190,205,'+(.11*fl)+')');gr.addColorStop(1,'rgba(140,190,205,0)');cx.fillStyle=gr;cx.beginPath();cx.moveTo(x0-18,0);cx.lineTo(x0+18,0);cx.lineTo(x0+sw+W*.12,H*.9);cx.lineTo(x0+sw-W*.12,H*.9);cx.closePath();cx.fill()}
- for(let i=0;i<5;i++){const q=((i*.37+T*.01*(i%2?1:-1))%1+1)%1,fx=W*(.15+.7*q),fy=H*(.3+.5*Math.abs(Math.sin(T*.05+i*1.7))),r=Math.max(W,H)*.45;const gr=cx.createRadialGradient(fx,fy,0,fx,fy,r);gr.addColorStop(0,'rgba(80,120,135,.07)');gr.addColorStop(1,'rgba(80,120,135,0)');cx.fillStyle=gr;cx.fillRect(0,0,W,H)}
- cx.restore();
- for(const p of P){p.y-=p.s;p.x+=Math.sin(T*.3+p.p)*.12;if(p.y<-5){p.y=H+5;p.x=Math.random()*W}
-  cx.globalAlpha=(.15+.35*Math.abs(Math.sin(T*.8+p.p)))*fl;cx.fillStyle='#bcd8e0';cx.beginPath();cx.arc(p.x+(mx-.5)*-30*p.z,p.y+(my-.5)*-20*p.z,p.r,0,6.283);cx.fill()}
- const n=(t/90)|0;if(!rm&&n!==gn){gn=n;noise()}
- cx.globalAlpha=.07;cx.globalCompositeOperation='overlay';cx.fillStyle=cx.createPattern(nz,'repeat');cx.save();cx.translate(Math.random()*160,Math.random()*160);cx.fillRect(-160,-160,W+320,H+320);cx.restore();
- cx.globalCompositeOperation='source-over';cx.globalAlpha=1;
- if(!rm&&!document.hidden)requestAnimationFrame(frame);else run=false}
-function go(){if(!run){run=true;requestAnimationFrame(frame)}}
-go();document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!rm)go()});
-window.warp=function(){if(rm)return;const f=$('flash');f.classList.remove('go');void f.offsetWidth;f.classList.add('go')}})();
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      background: radial-gradient(ellipse at 50% 40%, transparent 30%, rgba(0, 0, 0, .8) 100%)
+    }
 
-render();enter();{const on=document.querySelector('#banners .plate.on');on&&on.scrollIntoView({inline:'center',block:'nearest'})}addEventListener('resize',place);$('banners').addEventListener('scroll',place);document.fonts&&document.fonts.ready.then(place);
-/* ---- viewing + pull-request editing ---- */
-const rootIdx=n=>{let e=P.get(n.id);while(e&&e.p)e=P.get(e.p.id);return e?DATA.indexOf(e.n):-1};
-const mine=b=>role==='admin'||(role==='editor'&&BR.includes(b));
-const canEditNode=n=>mine(rootIdx(n));
-const hash=s=>{let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return h};
-const REPO=()=>{const r=(ACCESS&&ACCESS.repo)||'';return /^[\w.-]+\/[\w.-]+$/.test(r)&&!r.startsWith('YOUR_')?r:''};
-function icons(n){const a=((n.link||LINKS[n.names[0]])?'🔗':'')+((n.ph||[]).some(Boolean)?'📷':'')+(n.tel?'📞':'')+(n.addr?'📍':'');return a?'<i>'+a+'</i>':''}
-function contact(n){return(n.tel?'<div class="m">📞 <a href="tel:'+E(String(n.tel).replace(/[^\d+]/g,''))+'">'+E(n.tel)+'</a></div>':'')+(n.addr?'<div class="m">📍 '+E(n.addr)+' · <a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(n.addr)+'">Map</a></div>':'')}
-function flat(root){const m=new Map();(function f(n,pn){n.kids.forEach(k=>{m.set(k.id,{n:k,p:pn});f(k,k)})})(root,root);return m}
-const lab=n=>n.names.join(' & ');
-function diff(a,b){const A=flat(a),B=flat(b),o=[];B.forEach(({n,p},id)=>{const x=A.get(id);if(!x)o.push('➕ '+lab(n)+'  (under '+lab(p)+')');else{const y=x.n;if(lab(y)!==lab(n))o.push('✏️ '+lab(y)+' → '+lab(n));const c=[];[['c','colour'],['tel','phone'],['addr','address'],['link','link']].forEach(([k,l])=>{if((y[k]||'')!==(n[k]||''))c.push(l)});[['bg','blood group'],['dd','passed away'],['ph','photo']].forEach(([k,l])=>{if(JSON.stringify(y[k]||[])!==JSON.stringify(n[k]||[]))c.push(l)});if(c.length)o.push('✏️ '+lab(n)+': '+c.join(', ')+' changed')}});A.forEach(({n},id)=>{if(!B.has(id))o.push('➖ '+lab(n)+' removed')});return o}
-const dlist=d=>'<div class="dl">'+(d&&d.length?d.slice(0,40).map(x=>'<div>'+E(x)+'</div>').join('')+(d.length>40?'<div>…and '+(d.length-40)+' more</div>':''):'<div>No changes found</div>')+'</div>';
-function modal(h,fn){$('mc').dataset.k='';$('mc').innerHTML=h;$('modal').style.display='flex';fn&&fn($('mc'))}
-$('mx').onclick=()=>$('modal').style.display='none';
+    .bar {
+      position: sticky;
+      top: env(safe-area-inset-top, 0px);
+      z-index: 5;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 8px 14px;
+      background: linear-gradient(#2d241a, #17120c);
+      border-bottom: 2px solid var(--bd);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, .45)
+    }
 
-/* roles come from data/access.json (in git) + the GitHub username the visitor enters */
-function resolveRole(){const u=(GH.user||'').toLowerCase();BR=[];role='viewer';if(!u||!ACCESS)return;
- if(u===String(ACCESS.admin||'').toLowerCase()){role='admin';BR=META.map((x,i)=>i);return}
- const e=Object.entries(ACCESS.users||{}).find(([k])=>k.toLowerCase()===u);
- if(e){BR=e[1].map(f=>META.indexOf(f)).filter(i=>i>=0);if(BR.length)role='editor'}}
-const unsentB=()=>dirtyB.filter(b=>DATA[b]&&SENT[b]!==hash(JSON.stringify(DATA[b])));
-function refreshDirty(){let L=[];try{L=JSON.parse(LIVEJ)}catch(x){}
- dirtyB=BR.filter(b=>L[b]&&DATA[b]&&JSON.stringify(DATA[b])!==JSON.stringify(L[b]));
- const dr={};dirtyB.forEach(b=>dr[b]=DATA[b]);if(GH.user)S('draft:'+GH.user.toLowerCase(),dirtyB.length?JSON.stringify(dr):null);setRole()}
-function loadDrafts(){dirtyB=[];if(!GH.user||!BR.length)return;try{const dr=JSON.parse(S('draft:'+GH.user.toLowerCase())||'{}');Object.keys(dr).forEach(b=>{if(BR.includes(+b)&&DATA[+b])DATA[+b]=dr[b]});reindex();refreshDirty()}catch(x){}}
-function setRole(){const ok=role==='admin'||role==='editor';
- $('who').textContent=(ME?ME.name+' · ':'')+(role==='admin'?'👑 Admin · @'+GH.user:role==='editor'?'✏️ @'+GH.user:GH.user?'👁 @'+GH.user+' (no branches assigned)':(ME||PUBLIC?'👁 View only':'👁 Public view'));
- $('gh').style.display=(ME||PUBLIC)?'':'none';$('gh').textContent=GH.user?'🔗 @'+GH.user:'🔗 Connect GitHub';
- $('sub').style.display=ok&&unsentB().length?'':'none';$('dis').style.display=ok&&dirtyB.length?'':'none';$('prs').style.display=REPO()?'':'none'}
-function save(){refreshDirty();st('Draft kept on this device — tap “Submit changes” to send it as a pull request')}
-function apply(){}
+    .bar input,
+    .side input {
+      flex: 1;
+      min-width: 140px;
+      padding: 7px 10px;
+      border: 1px solid var(--bd);
+      border-radius: 8px;
+      background: #120e09;
+      color: var(--ink)
+    }
 
-/* ---- GitHub connection ---- */
-async function ghApi(path,opt){const r=await fetch('https://api.github.com'+path,Object.assign({},opt,{headers:Object.assign({'Accept':'application/vnd.github+json','Authorization':'Bearer '+GH.token,'X-GitHub-Api-Version':'2022-11-28'},(opt&&opt.headers)||{})}));
- if(!r.ok){let t='';try{t=await r.text()}catch(x){}const e=new Error(r.status+' '+t.slice(0,160));e.status=r.status;throw e}return r.status===204?null:r.json()}
-function ghDialog(){modal('<h3>Connect your GitHub account</h3><div class="m">Your changes become a <b>pull request</b> that the admin reviews and merges. Enter your GitHub username. A token is optional: with one, the site creates the pull request for you.</div><input id="gu" placeholder="GitHub username" value="'+E(GH.user)+'" autocapitalize="none" autocomplete="off"><input id="gt" type="password" placeholder="Token (optional)" value="'+E(GH.token)+'" autocomplete="off"><div class="m">Create a <i>fine-grained</i> token at github.com/settings/personal-access-tokens for <b>this repository only</b> with <b>Contents: read &amp; write</b> and <b>Pull requests: read &amp; write</b>. It stays on this device only. No token? You can still send changes — the site shows you what to paste into GitHub.</div><button id="gs">Save</button>'+(GH.user?'<button id="gx" class="dn">Disconnect</button>':'')+'<div id="gm" class="warn"></div>',m=>{
-  const msg=t=>m.querySelector('#gm').textContent=t;
-  m.querySelector('#gs').onclick=async()=>{const u=m.querySelector('#gu').value.trim().replace(/^@/,''),t=m.querySelector('#gt').value.trim();if(!/^[A-Za-z0-9-]{1,39}$/.test(u)){msg('Enter a valid GitHub username.');return}
-   if(t){try{GH.token=t;const me=await ghApi('/user');if(String(me.login).toLowerCase()!==u.toLowerCase()){GH.token='';msg('That token belongs to @'+me.login+', not @'+u+'.');return}}catch(x){GH.token='';msg('GitHub did not accept that token ('+(x.status||'network')+').');return}}else GH.token='';
-   GH.user=u;S('gh:user',u);S('gh:token',GH.token||null);resolveRole();loadDrafts();render();setRole();$('modal').style.display='none';
-   st(role==='viewer'?'@'+u+' has no branches assigned yet — ask the admin to add you to data/access.json':'Connected as @'+u)};
-  const x=m.querySelector('#gx');if(x)x.onclick=()=>{GH={user:'',token:''};S('gh:user',null);S('gh:token',null);if(ed){ed=false;$('ed').classList.remove('on');document.querySelectorAll('.edo').forEach(e=>e.style.display='none')}resolveRole();dirtyB=[];setRole();render();$('modal').style.display='none'}})}
-$('gh').onclick=ghDialog;
-$('prs').onclick=()=>window.open('https://github.com/'+REPO()+'/pulls','_blank','noopener');
+    .bar button,
+    .tabs button,
+    .side button {
+      padding: 6px 11px;
+      border: 1px solid #b8893f;
+      border-radius: 7px;
+      background: linear-gradient(#3a2e20, #21190f);
+      color: #f0d9a0;
+      cursor: pointer;
+      font-family: var(--ff);
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: .03em
+    }
 
-/* ---- send changes as a pull request ---- */
-const branchJson=b=>JSON.stringify({id:DATA[b].id,names:DATA[b].names,kids:DATA[b].kids},null,2)+'\n';
-const b64=s=>btoa(unescape(encodeURIComponent(s)));
-function newPhotos(bs){const o={};bs.forEach(b=>(function f(n){(n.ph||[]).forEach(p=>{if(p&&NEWPH[p])o[p]=NEWPH[p]});n.kids.forEach(f)})(DATA[b]));return o}
-async function createPR(bs,note){const repo=REPO(),L=JSON.parse(LIVEJ),ph=newPhotos(bs);
- const base=(await ghApi('/repos/'+repo+'/git/ref/heads/main')).object.sha,name='edit/'+GH.user.toLowerCase()+'-'+Date.now().toString(36);
- await ghApi('/repos/'+repo+'/git/refs',{method:'POST',body:JSON.stringify({ref:'refs/heads/'+name,sha:base})});
- const put=async(path,b64c,msg)=>{let sha;try{sha=(await ghApi('/repos/'+repo+'/contents/'+path+'?ref='+encodeURIComponent(name))).sha}catch(x){if(x.status!==404)throw x}
-  await ghApi('/repos/'+repo+'/contents/'+path,{method:'PUT',body:JSON.stringify({message:msg,content:b64c,branch:name,sha})})};
- for(const id of Object.keys(ph))await put('data/photos/'+id+'.jpg',ph[id].split(',')[1],'Add photo '+id);
- for(const b of bs)await put('data/branches/'+META[b],b64(branchJson(b)),'Update '+DATA[b].names.join(' / '));
- const lines=bs.map(b=>'**'+DATA[b].names.join(' / ')+'**\n'+diff(L[b],DATA[b]).slice(0,60).map(x=>'- '+x).join('\n')).join('\n\n');
- return ghApi('/repos/'+repo+'/pulls',{method:'POST',body:JSON.stringify({title:'@'+GH.user+': update '+bs.map(b=>DATA[b].names[0]).join(', '),head:name,base:'main',body:(note?'> '+note.replace(/\n/g,'\n> ')+'\n\n':'')+lines})})}
-function manualHtml(bs,ph){const repo=REPO();if(!repo)return '<div class="m">The repository is not configured in data/access.json.</div>';
- return '<div class="m">1. Copy the updated file. 2. Open it on GitHub, select all, paste. 3. “Commit changes” → choose <b>Create a new branch and start a pull request</b>.</div>'
- +bs.map(b=>'<div class="r"><button class="cp" data-b="'+b+'">Copy '+E(DATA[b].names[0])+'</button><a class="btn" target="_blank" rel="noopener" href="https://github.com/'+repo+'/edit/main/data/branches/'+encodeURIComponent(META[b])+'">Open on GitHub</a></div>').join('')
- +(Object.keys(ph).length?'<div class="m">New photos — download them, then add them in the same pull request (<a target="_blank" rel="noopener" href="https://github.com/'+repo+'/upload/main/data/photos">upload page</a>):</div>'+Object.keys(ph).map(id=>'<a class="btn" download="'+id+'.jpg" href="'+ph[id]+'">⬇ '+id+'.jpg</a>').join(''):'')}
-$('sub').onclick=()=>{const L=JSON.parse(LIVEJ),bs=unsentB(),ph=newPhotos(bs);
- modal('<h3>Send your changes</h3>'+bs.map(b=>'<div class="m"><b>'+E(DATA[b].names.join(' / '))+'</b></div>'+dlist(diff(L[b],DATA[b]))).join('')+'<textarea id="nt" rows="2" placeholder="Note for the admin (optional)"></textarea>'+(GH.token?'<button id="go">Create pull request</button><div class="m">Or do it by hand:</div>':'<div class="m">No token connected — do it by hand:</div>')+manualHtml(bs,ph)+'<div id="gm" class="warn"></div>',m=>{
-  m.querySelectorAll('.cp').forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(branchJson(+b.dataset.b));b.textContent='Copied ✔'}catch(x){b.textContent='Copy failed'}});
-  const go=m.querySelector('#go');if(go)go.onclick=async()=>{go.disabled=true;go.textContent='Creating…';try{const pr=await createPR(bs,m.querySelector('#nt').value.slice(0,500));bs.forEach(b=>{SENT[b]=hash(JSON.stringify(DATA[b]))});setRole();m.innerHTML='<h3>✅ Pull request created</h3><div class="m">The admin will review it. You will get a GitHub email when it is merged or closed.</div><a class="btn" target="_blank" rel="noopener" href="'+E(pr.html_url)+'">Open the pull request</a>'}catch(x){go.disabled=false;go.textContent='Create pull request';m.querySelector('#gm').textContent='Could not create it ('+(x.message||'error').slice(0,120)+'). You can use the manual steps below.'}}})};
-$('dis').onclick=()=>{const L=JSON.parse(LIVEJ);dirtyB.forEach(b=>{DATA[b]=L[b];delete SENT[b]});dirtyB=[];if(GH.user)S('draft:'+GH.user.toLowerCase(),null);reindex();sel=null;hide();render();setRole();st('Back to the published version')};
+    .bar button:hover,
+    .tabs button:hover,
+    .side button:hover {
+      filter: brightness(1.25)
+    }
 
-/* ---- sign-in session (login is checked on the server) ---- */
-let ME=null;
-async function whoami(){try{const r=await fetch('/api/me',{cache:'no-store',credentials:'same-origin'});if(r.ok){const j=await r.json();ME=j&&j.user?j:null}}catch(x){}
- if(ME){$('out').style.display='';$('in').style.display='none';if(S('gh:for')!==ME.user){GH={user:'',token:''};S('gh:user',null);S('gh:token',null);S('gh:for',ME.user)}if(ME.github&&GH.user.toLowerCase()!==ME.github.toLowerCase()){GH={user:ME.github,token:''};S('gh:user',ME.github);S('gh:token',null)}}
- else{$('in').style.display='';$('out').style.display='none';GH={user:'',token:''};['gh:user','gh:token','gh:for'].forEach(k=>S(k,null))}return true}
-$('in').onclick=()=>{location.href='/login.html'};
-$('out').onclick=async()=>{try{await fetch('/api/logout',{method:'POST',credentials:'same-origin'})}catch(x){}['gh:user','gh:token','gh:for'].forEach(k=>S(k,null));location.replace('/')};
+    .bar .on,
+    .tabs button.on {
+      background: linear-gradient(#b8893f, #7c5619);
+      color: #fff;
+      border-color: #f0d9a0
+    }
 
-/* ---- load the published data ---- */
-let PUBLIC=false,NOCONTACT=false;
-async function loadAccess(){try{const r=await fetch('access.json',{cache:'no-store',credentials:'same-origin'});if(r.ok)return await r.json()}catch(x){}return null}
-(async()=>{try{let a=await loadAccess();PUBLIC=!!(a&&a.mode==='public');NOCONTACT=PUBLIC&&a.allowContact!==true;document.body.classList.toggle('nocontact',NOCONTACT);
- if(!PUBLIC){await whoami();if(ME&&!a)a=await loadAccess()}
- const d=await fetch('data.json',{cache:'no-store',credentials:'same-origin'}).then(r=>{if(!r.ok)throw new Error('data '+r.status);return r.json()});
- ACCESS=a;META=d.files;LIVEJ=JSON.stringify(d.tree);DATA=JSON.parse(LIVEJ);reindex();DATA.forEach(r=>r.kids.forEach(k=>open.add(k.id)));loaded=true;
- resolveRole();loadDrafts();render();enter();place();setRole()}
- catch(e){$('tree').innerHTML='<div class="m" style="padding:30px 6px">Could not load the family data ('+E(e.message)+').</div>'}})();
-</script><script id="direct-save">
-/* Admin "Save to site": commits straight to main (no pull request). Additive: wraps existing functions, safe to add to a customised page. */
-(function () {
-  if (window.__directSave) return; window.__directSave = 1;
-  const stripK = ks => ks.map(({ tel, addr, bg, ...r }) => ({ ...r, kids: stripK(r.kids || []) }));
-  const normB = r => JSON.stringify({ id: r.id, names: r.names, kids: NOCONTACT ? stripK(r.kids || []) : (r.kids || []) });
-  const savedKey = b => 'saved:' + b;
-  // Repo name: from data/access.json, or guessed from the web address (https://OWNER.github.io/REPO/).
-  const repoName = () => { let r = ''; try { r = REPO(); } catch (x) {} if (r) return r; const m = /^([^.]+)\.github\.io$/.exec(location.hostname), seg = location.pathname.split('/')[1]; return m && seg ? m[1] + '/' + seg : ''; };
-  // Admin = the signed-in token holder has ADMIN rights on the repository (GitHub decides; no need to edit access.json).
-  window.__repoAdmin = false; let adminChecked = '';
-  async function verifyAdmin() {
-    const key = (GH.user || '') + '|' + (GH.token || '') + '|' + repoName();
-    if (key === adminChecked) return; adminChecked = key;
-    let isAdm = false;
-    if (GH.token) {
-      if (!repoName()) st('Could not work out the repository name — check "repo" in data/access.json.');
-      else {
-        try {
-          const r = await ghApi('/repos/' + repoName());
-          isAdm = !!(r && r.permissions && r.permissions.admin);
-          st(isAdm ? '✅ GitHub confirms you are the admin of ' + repoName() + ' — changes save directly.' : 'ℹ️ This token works, but GitHub says your account is not an admin of ' + repoName() + ' — changes will go as pull requests. (Use a token made by the repository owner.)');
-        } catch (x) { st('⚠️ The token could not read ' + repoName() + ' (error ' + (x.status || 'network') + '). Make a new token: only Family_Tree selected, Contents = Read and write — or a classic token with "public_repo".'); }
+    .st {
+      font-size: 11.5px;
+      color: #f0d9a0;
+      opacity: .85
+    }
+
+    .leg {
+      display: flex;
+      gap: 6px 10px;
+      flex-wrap: wrap;
+      padding: 10px 14px 0;
+      position: relative;
+      z-index: 2
+    }
+
+    .leg span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(23, 18, 12, .88);
+      color: #f0d9a0;
+      padding: 3px 10px 3px 8px;
+      border-radius: 99px;
+      border: 1px solid var(--bd);
+      font-size: 11.5px
+    }
+
+    .leg b {
+      width: 10px;
+      height: 10px;
+      transform: rotate(45deg);
+      border: 1px solid #fff9;
+      box-shadow: 0 0 6px currentColor
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 10px 14px;
+      position: relative;
+      z-index: 2
+    }
+
+    .wrap {
+      --u: 1;
+      overflow-x: auto;
+      padding: 10px 24px 70px;
+      position: relative;
+      z-index: 2
+    }
+
+    .wrap.sz0 {
+      --u: .8
+    }
+
+    .wrap.sz2 {
+      --u: 1.2
+    }
+
+    .plate {
+      position: relative;
+      display: inline-block;
+      min-width: 270px;
+      padding: 11px 44px;
+      margin: 0 0 18px;
+      text-align: center;
+      font-family: var(--ff);
+      color: #f0d9a0;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      background: linear-gradient(#2c3340, #12151b);
+      border-radius: 6px;
+      box-shadow: inset 0 0 0 2px #0e1015, inset 0 0 0 3px #b8893f, 0 0 0 2px #5b4020, 0 5px 12px rgba(0, 0, 0, .55)
+    }
+
+    .plate::before,
+    .plate::after {
+      content: "◆";
+      position: absolute;
+      top: 50%;
+      margin-top: -9px;
+      color: #d9a441;
+      font-size: 14px;
+      text-shadow: 0 0 6px #d9a441
+    }
+
+    .plate::before {
+      left: 14px
+    }
+
+    .plate::after {
+      right: 14px
+    }
+
+    .p1 {
+      font-weight: 700;
+      font-size: 15px
+    }
+
+    .p2 {
+      font-size: 13px;
+      opacity: .9;
+      margin-top: 2px
+    }
+
+    .pi {
+      display: block;
+      width: 100%;
+      margin: 2px 0;
+      padding: 4px 6px;
+      text-align: center;
+      background: #0b0d11;
+      border: 1px solid #b8893f;
+      border-radius: 5px;
+      color: #f0d9a0;
+      font-family: var(--ff)
+    }
+
+    .n {
+      display: flex;
+      align-items: center
+    }
+
+    .kids {
+      position: relative;
+      margin-left: 26px;
+      display: flex;
+      flex-direction: column
+    }
+
+    .kids::before {
+      content: "";
+      position: absolute;
+      left: -26px;
+      top: 50%;
+      width: 26px;
+      height: 3px;
+      margin-top: -1px;
+      background: var(--pc, var(--line));
+      box-shadow: 0 0 7px var(--pc, transparent);
+      border-radius: 2px
+    }
+
+    .kids::after {
+      content: "";
+      position: absolute;
+      left: -5px;
+      top: 50%;
+      width: 10px;
+      height: 10px;
+      margin-top: -5px;
+      transform: rotate(45deg);
+      background: #17120c;
+      border: 2px solid var(--pc, var(--line));
+      box-shadow: 0 0 7px var(--pc, transparent)
+    }
+
+    .k {
+      position: relative;
+      padding: 5px 0 5px 26px
+    }
+
+    .k::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 26px;
+      height: 3px;
+      margin-top: -1px;
+      background: var(--lc);
+      box-shadow: 0 0 7px var(--lc);
+      border-radius: 2px
+    }
+
+    .k::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--lc);
+      box-shadow: 0 0 7px var(--lc);
+      border-radius: 2px
+    }
+
+    .k:first-child::after {
+      top: 50%
+    }
+
+    .k:last-child::after {
+      bottom: 50%
+    }
+
+    .k:only-child::after {
+      display: none
+    }
+
+    .kids>.k:only-child::before {
+      left: -26px;
+      width: 52px
+    }
+
+    .k>.n::before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      width: 10px;
+      height: 10px;
+      margin-top: -5px;
+      border-radius: var(--er, 50%);
+      background: #17120c;
+      border: 2px solid var(--lc);
+      box-shadow: 0 0 7px var(--lc);
+      z-index: 3
+    }
+
+    .blue {
+      --b: #2f9bff;
+      --g1: #2578c8;
+      --g2: #123e7c;
+      --glow: #35b6ff;
+      --lc: #35b6ff;
+      --tx: #fff;
+      --er: 50%;
+      --orn: "❖";
+      --pat: repeating-radial-gradient(circle at 0 100%, transparent 0 9px, rgba(255, 255, 255, .12) 9px 10px)
+    }
+
+    .pink {
+      --b: #ff3d9a;
+      --g1: #d62a86;
+      --g2: #7d1250;
+      --glow: #ff4fa8;
+      --lc: #ff4fa8;
+      --tx: #fff;
+      --er: 50%;
+      --orn: "✿";
+      --pat: radial-gradient(rgba(255, 255, 255, .18) 1.5px, transparent 2px) 0 0/11px 11px
+    }
+
+    .green {
+      --b: #45c452;
+      --g1: #2f9a3a;
+      --g2: #145019;
+      --glow: #4ed05a;
+      --lc: #4ed05a;
+      --tx: #fff;
+      --er: 3px;
+      --orn: "❦";
+      --pat: repeating-linear-gradient(60deg, transparent 0 8px, rgba(255, 255, 255, .11) 8px 9px)
+    }
+
+    .orange {
+      --b: #ff8a2a;
+      --g1: #d96a1c;
+      --g2: #7a3008;
+      --glow: #ff8a2a;
+      --lc: #ff8a2a;
+      --tx: #fff;
+      --er: 50%;
+      --orn: "✾";
+      --pat: radial-gradient(rgba(255, 255, 255, .17) 1.5px, transparent 2px) 3px 3px/12px 12px
+    }
+
+    .purple {
+      --b: #b05cff;
+      --g1: #7a2fc2;
+      --g2: #3d1068;
+      --glow: #b05cff;
+      --lc: #b05cff;
+      --tx: #fff;
+      --er: 3px;
+      --orn: "◈";
+      --pat: repeating-linear-gradient(45deg, transparent 0 8px, rgba(255, 255, 255, .11) 8px 9px), repeating-linear-gradient(-45deg, transparent 0 8px, rgba(255, 255, 255, .11) 8px 9px)
+    }
+
+    .teal {
+      --b: #22d6ff;
+      --g1: #0ea5cc;
+      --g2: #065070;
+      --glow: #22d6ff;
+      --lc: #22d6ff;
+      --tx: #fff;
+      --er: 3px;
+      --orn: "≋";
+      --pat: repeating-radial-gradient(circle at 50% 100%, transparent 0 7px, rgba(255, 255, 255, .14) 7px 8px)
+    }
+
+    .yellow {
+      --b: #ffc928;
+      --g1: #e8b01a;
+      --g2: #8a5d04;
+      --glow: #ffc928;
+      --lc: #ffc928;
+      --tx: #2b1d05;
+      --er: 3px;
+      --orn: "✠";
+      --pat: repeating-linear-gradient(45deg, transparent 0 9px, rgba(80, 50, 0, .16) 9px 10px)
+    }
+
+    .c {
+      --ring: 0 0 0 2px #1a1208, 0 0 0 3px var(--b);
+      position: relative;
+      display: flex;
+      align-items: center;
+      margin-left: calc(30px*var(--u));
+      min-width: calc(200px*var(--u));
+      max-width: calc(290px*var(--u));
+      min-height: calc(54px*var(--u));
+      padding: calc(7px*var(--u)) calc(34px*var(--u)) calc(7px*var(--u)) calc(34px*var(--u));
+      border-radius: 9px 14px 14px 9px;
+      color: var(--tx);
+      cursor: pointer;
+      font-family: var(--ff);
+      font-size: calc(11.5px*var(--u));
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, .55);
+      border: 2px solid var(--b);
+      background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, .55) 50%, transparent 70%) -200% 0/45% 100% no-repeat, var(--pat), linear-gradient(180deg, var(--g1), var(--g2));
+      box-shadow: var(--ring), 0 0 11px color-mix(in srgb, var(--glow) 60%, transparent), inset 0 0 0 2px rgba(255, 226, 160, .35), inset 0 7px 10px rgba(255, 255, 255, .18), inset 0 -9px 14px rgba(0, 0, 0, .28);
+      transition: transform .25s, box-shadow .25s, filter .25s
+    }
+
+    .yellow.c {
+      text-shadow: none
+    }
+
+    .c::after {
+      content: var(--orn);
+      position: absolute;
+      right: calc(9px*var(--u));
+      bottom: calc(2px*var(--u));
+      font-size: calc(24px*var(--u));
+      opacity: .35;
+      pointer-events: none;
+      text-shadow: none
+    }
+
+    .av {
+      position: absolute;
+      left: calc(-30px*var(--u));
+      top: 50%;
+      margin-top: calc(-26px*var(--u));
+      width: calc(52px*var(--u));
+      height: calc(52px*var(--u));
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: calc(21px*var(--u));
+      font-weight: 700;
+      color: #f3dca6;
+      text-shadow: 0 0 8px #d9a441;
+      background: radial-gradient(circle at 35% 30%, #3a3a42, #0d0d11 70%);
+      border: 3px solid var(--b);
+      box-shadow: 0 0 0 3px #b8893f, 0 0 0 5px #1a1208, 0 0 12px var(--glow);
+      transition: transform .45s
+    }
+
+    .av::before,
+    .av::after {
+      content: "";
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      transform: rotate(45deg);
+      background: var(--b);
+      border: 1px solid #fffc;
+      box-shadow: 0 0 6px var(--glow)
+    }
+
+    .av::before {
+      top: -9px;
+      left: 50%;
+      margin-left: -4px
+    }
+
+    .av::after {
+      bottom: -9px;
+      right: 6px
+    }
+
+    .c .t {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+      flex: 1;
+      position: relative;
+      z-index: 1
+    }
+
+    .ln {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: space-between
+    }
+
+    .ln span {
+      overflow-wrap: anywhere
+    }
+
+    .ln+.ln {
+      font-weight: 600;
+      opacity: .95;
+      font-size: .94em
+    }
+
+    .bd {
+      flex: none;
+      font-family: system-ui, sans-serif;
+      font-size: .82em;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 99px;
+      background: #5a0f1a;
+      color: #ffd9de;
+      border: 1px solid #ff6b7d;
+      text-shadow: none;
+      letter-spacing: 0
+    }
+
+    .bd.e {
+      background: transparent;
+      border: 1px dashed currentColor;
+      opacity: .7
+    }
+
+    .c i {
+      position: absolute;
+      right: 8px;
+      top: 4px;
+      font-style: normal;
+      font-size: 11px;
+      z-index: 2
+    }
+
+    .c.sel {
+      box-shadow: var(--ring), 0 0 0 6px rgba(255, 255, 255, .9), 0 0 20px 6px var(--glow)
+    }
+
+    .c.hit {
+      box-shadow: var(--ring), 0 0 0 6px #e53935, 0 0 18px 6px #ff7b73
+    }
+
+    .c:hover {
+      z-index: 4;
+      filter: brightness(1.13);
+      box-shadow: var(--ring), 0 0 20px 3px var(--glow), inset 0 0 0 2px rgba(255, 226, 160, .5), inset 0 7px 10px rgba(255, 255, 255, .22)
+    }
+
+    .c:hover .av {
+      transform: rotate(360deg) scale(1.08)
+    }
+
+    .blue.c:hover {
+      transform: translateY(-4px);
+      animation: pulse 1.1s infinite
+    }
+
+    .pink.c:hover {
+      transform: scale(1.05);
+      animation: shine .9s
+    }
+
+    .green.c:hover {
+      animation: sway .7s ease-in-out infinite
+    }
+
+    .orange.c:hover {
+      animation: flame .45s infinite alternate
+    }
+
+    .purple.c:hover {
+      transform: perspective(320px) rotateY(10deg) scale(1.05)
+    }
+
+    .teal.c:hover {
+      transform: translateX(5px);
+      animation: shine 1.2s infinite
+    }
+
+    .yellow.c:hover {
+      transform: scale(1.06);
+      animation: gold 1s infinite, shine .8s infinite
+    }
+
+    @keyframes shine {
+      from {
+        background-position: -200% 0, 0 0, 0 0
+      }
+
+      to {
+        background-position: 300% 0, 0 0, 0 0
       }
     }
-    if (isAdm !== window.__repoAdmin) { window.__repoAdmin = isAdm; try { resolveRole(); loadDrafts(); render(); setRole(); } catch (x) {} }
-  }
-  const _rr = resolveRole; resolveRole = function () { _rr.apply(this, arguments); if (window.__repoAdmin) { role = 'admin'; BR = META.map((x, i) => i); } };
-  // "saved" = committed to GitHub but the published site may not have rebuilt yet; forget it once the site catches up.
-  function cleanSaved() { try { DATA.forEach((r, b) => { const k = S(savedKey(b)); if (k && k === normB(r)) S(savedKey(b), null); }); } catch (x) {} }
-  const _ld = loadDrafts; loadDrafts = function () { cleanSaved(); verifyAdmin(); return _ld.apply(this, arguments); };
-  // On github.io there is no login server: always behave as the public, pull-request site (even if data/access.json lacks "mode": "public").
-  const onPages = () => window.__FORCE_PAGES === true || /\.github\.io$/.test(location.hostname);
-  function forcePublic() {
-    if (!onPages()) return;
-    if (!PUBLIC) { PUBLIC = true; NOCONTACT = !(ACCESS && ACCESS.allowContact === true); try { document.body.classList.toggle('nocontact', NOCONTACT); } catch (x) {} }
-    ME = null; ['in', 'out'].forEach(i => { const e = $(i); if (e) e.style.display = 'none'; });
-  }
-  const _sr = setRole; setRole = function () { forcePublic(); _sr.apply(this, arguments); try { $('sub').textContent = role === 'admin' ? '💾 Save changes' : '📤 Submit changes'; } catch (x) {} };
-  const _sub = $('sub').onclick; $('sub').onclick = function () { if (role === 'admin') { adminSaveNow(); return; } return _sub && _sub.apply(this, arguments); };
-  function toast(t) {
-    let e = document.getElementById('ds-toast');
-    if (!e) { e = document.createElement('div'); e.id = 'ds-toast'; e.setAttribute('role', 'status'); e.style.cssText = 'position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:12;max-width:92vw;padding:11px 16px;border-radius:12px;border:1px solid #b8893f;background:#1f1a14;color:#f0d9a0;font:600 14px system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.6);text-align:center'; document.body.appendChild(e); }
-    e.textContent = t; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => { e.style.display = 'none'; }, 7000);
-  }
-  // One tap: saves straight to the site (no confirmation step).
-  async function adminSaveNow() {
-    if (!GH.token) { adminSave(); return; }                 // no token yet: explain how to connect one
-    const bs = unsentB(); if (!bs.length) return;
-    const btn = $('sub'); btn.disabled = true; btn.textContent = '⏳ Saving…';
-    try {
-      await saveDirect(bs); bs.forEach(b => { SENT[b] = hash(JSON.stringify(DATA[b])); });
-      toast('✅ Saved — the live site updates in about a minute'); st('Saved to GitHub — live in about a minute');
-    } catch (x) {
-      const msg = String(x.message || 'error');
-      modal('<h3>Could not save</h3><div class="warn">' + E(saveErr(x, msg)) + '</div><button id="rt">Try again</button>', m => { m.querySelector('#rt').onclick = () => { $('modal').style.display = 'none'; adminSaveNow(); }; });
-    } finally { btn.disabled = false; setRole(); }
-  }
-  function saveErr(x, msg) {
-    return x.conflict
-      ? '“' + x.conflict + '” was changed on GitHub since you opened this page (for example a pull request was merged). Reload the page, then repeat your edit so nothing is overwritten.'
-      : 'Could not save (' + msg.slice(0, 140) + ')' + (/protected|rule|bypass/i.test(msg) ? ' — in the repository ruleset, set “Repository admin” to “Always allow” in the bypass list.' : (x.status === 401 || x.status === 403 || x.status === 404 ? ' — check the token is still valid and has Contents: read & write on this repository.' : (x.status === 409 || x.status === 422 ? ' — GitHub says the file changed; reload and retry.' : '')));
-  }
 
-  async function remoteBranch(b) {
-    const f = await ghApi('/repos/' + repoName() + '/contents/data/branches/' + encodeURIComponent(META[b]) + '?ref=main');
-    return { sha: f.sha, obj: JSON.parse(decodeURIComponent(escape(atob(f.content.replace(/\s/g, ''))))) };
-  }
-  async function saveDirect(bs) {
-    const repo = repoName(), L = JSON.parse(LIVEJ), ph = newPhotos(bs), cur = {};
-    for (const b of bs) {            // never overwrite something that changed on GitHub since this page loaded
-      const r = await remoteBranch(b); cur[b] = r; const rem = normB(r.obj);
-      if (rem !== normB(L[b]) && rem !== S(savedKey(b))) { const e = new Error('conflict'); e.conflict = DATA[b].names.join(' / '); throw e; }
+    @keyframes pulse {
+
+      0%,
+      100% {
+        box-shadow: var(--ring), 0 0 9px var(--glow)
+      }
+
+      50% {
+        box-shadow: var(--ring), 0 0 24px 5px var(--glow)
+      }
     }
-    const put = (path, content, msg, sha) => ghApi('/repos/' + repo + '/contents/' + path, { method: 'PUT', body: JSON.stringify({ message: msg, content, branch: 'main', sha }) });
-    for (const id of Object.keys(ph)) {
-      let sha; try { sha = (await ghApi('/repos/' + repo + '/contents/data/photos/' + id + '.jpg?ref=main')).sha; } catch (x) { if (x.status !== 404) throw x; }
-      await put('data/photos/' + id + '.jpg', ph[id].split(',')[1], 'Add photo ' + id, sha);
+
+    @keyframes sway {
+
+      0%,
+      100% {
+        transform: rotate(-1.8deg) scale(1.03)
+      }
+
+      50% {
+        transform: rotate(1.8deg) scale(1.03)
+      }
     }
-    for (const b of bs) { await put('data/branches/' + META[b], b64(branchJson(b)), 'Admin edit: ' + DATA[b].names.join(' / '), cur[b].sha); S(savedKey(b), normB(DATA[b])); }
-  }
-  function adminSave() {
-    const L = JSON.parse(LIVEJ), bs = unsentB(), ph = newPhotos(bs);
-    modal('<h3>Save changes</h3><div class="m">Saved straight to GitHub — no pull request. The live site updates in about a minute.</div>'
-      + bs.map(b => '<div class="m"><b>' + E(DATA[b].names.join(' / ')) + '</b></div>' + dlist(diff(L[b], DATA[b]))).join('')
-      + (GH.token ? '<button id="go">💾 Save now</button>' : '<div class="warn">To save directly, connect GitHub with a token that has <b>Contents: read &amp; write</b> (tap 🔗 at the top). Or save by hand:</div>' + manualHtml(bs, ph))
-      + '<div id="gm" class="warn"></div>', m => {
-        m.querySelectorAll('.cp').forEach(b => b.onclick = async () => { try { await navigator.clipboard.writeText(branchJson(+b.dataset.b)); b.textContent = 'Copied ✔'; } catch (x) { b.textContent = 'Copy failed'; } });
-        const go = m.querySelector('#go');
-        if (go) go.onclick = async () => {
-          go.disabled = true; go.textContent = 'Saving…';
-          try {
-            await saveDirect(bs); bs.forEach(b => { SENT[b] = hash(JSON.stringify(DATA[b])); }); setRole();
-            m.innerHTML = '<h3>✅ Saved</h3><div class="m">Your changes are in GitHub. The live site updates in about a minute — reload then.</div>'; st('Saved to GitHub — live in about a minute');
-          } catch (x) {
-            go.disabled = false; go.textContent = '💾 Save now';
-            m.querySelector('#gm').textContent = saveErr(x, String(x.message || 'error'));
-          }
+
+    @keyframes flame {
+      0% {
+        box-shadow: var(--ring), 0 0 9px var(--glow);
+        transform: translateY(-1px) scale(1.03)
+      }
+
+      100% {
+        box-shadow: var(--ring), 0 0 24px 4px #ffb24a;
+        transform: translateY(-3px) scale(1.05)
+      }
+    }
+
+    @keyframes gold {
+
+      0%,
+      100% {
+        box-shadow: var(--ring), 0 0 11px var(--glow)
+      }
+
+      50% {
+        box-shadow: var(--ring), 0 0 28px 6px #ffe07a
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+
+      .c,
+      .c * {
+        animation: none !important;
+        transition: none !important
+      }
+    }
+
+    .tg {
+      width: 20px;
+      height: 20px;
+      margin-left: 8px;
+      border: 2px solid var(--lc);
+      border-radius: 50%;
+      background: #17120c;
+      color: #fff;
+      font-size: 12px;
+      line-height: 14px;
+      padding: 0;
+      cursor: pointer;
+      flex: none;
+      box-shadow: 0 0 6px var(--lc)
+    }
+
+    .side {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      width: min(350px, 100%);
+      max-height: 62vh;
+      overflow: auto;
+      background: linear-gradient(#2a2015, #17120c);
+      color: var(--ink);
+      border: 2px solid #b8893f;
+      border-radius: 14px 14px 0 0;
+      padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+      box-shadow: 0 -4px 16px rgba(0, 0, 0, .5);
+      display: none;
+      z-index: 6
+    }
+
+    .side h3 {
+      margin: 0 0 4px;
+      font: 700 16px var(--ff);
+      color: #f0d9a0
+    }
+
+    .side .m {
+      opacity: .8;
+      margin: 3px 0
+    }
+
+    .side a {
+      color: #8ec9ff;
+      word-break: break-all
+    }
+
+    .side select {
+      width: 100%;
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid var(--bd);
+      background: #120e09;
+      color: var(--ink)
+    }
+
+    .r {
+      display: flex;
+      gap: 6px;
+      align-items: center
+    }
+
+    .r input {
+      flex: 1;
+      min-width: 0
+    }
+
+    .r select {
+      width: auto;
+      flex: none
+    }
+
+    .dn {
+      color: #ff8a8a !important
+    }
+
+    .x {
+      float: right;
+      border: 0 !important;
+      background: none !important;
+      color: var(--ink) !important;
+      font-size: 18px !important;
+      padding: 0 4px !important
+    }
+
+    /* ---- DARK cinematic theme ---- */
+    #fx {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none
+    }
+
+    #spot {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      background: radial-gradient(circle 340px at var(--mx, 50%) var(--my, 40%), rgba(150, 205, 225, .10), transparent 70%)
+    }
+
+    #flash {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 7;
+      background: #cfe9f0;
+      opacity: 0
+    }
+
+    #flash.go {
+      animation: flash .55s
+    }
+
+    @keyframes flash {
+      0% {
+        opacity: .55
+      }
+
+      15% {
+        opacity: .05
+      }
+
+      30% {
+        opacity: .35
+      }
+
+      100% {
+        opacity: 0
+      }
+    }
+
+    .warp {
+      animation: warp .75s
+    }
+
+    @keyframes warp {
+      0% {
+        opacity: 0;
+        filter: blur(10px) hue-rotate(50deg) brightness(2);
+        transform: scale(1.03)
+      }
+
+      30% {
+        opacity: .8;
+        filter: blur(2px) hue-rotate(-25deg);
+        transform: translateX(-7px)
+      }
+
+      50% {
+        opacity: .5;
+        transform: translateX(6px) skewX(2deg)
+      }
+
+      70% {
+        opacity: 1;
+        transform: translateX(-2px)
+      }
+
+      100% {
+        opacity: 1;
+        filter: none;
+        transform: none
+      }
+    }
+
+    .c {
+      filter: brightness(.9) saturate(.9)
+    }
+
+    .c:hover .t {
+      animation: glitch .45s steps(2) 1
+    }
+
+    .c:hover .av {
+      animation: jit .3s steps(2) 2
+    }
+
+    @keyframes glitch {
+
+      0%,
+      100% {
+        text-shadow: none;
+        transform: none
+      }
+
+      20% {
+        text-shadow: 2px 0 #ff2d55, -2px 0 #2de2ff;
+        transform: translateX(-1px)
+      }
+
+      40% {
+        text-shadow: -2px 0 #ff2d55, 2px 0 #2de2ff;
+        transform: translateX(1px)
+      }
+
+      60% {
+        text-shadow: 1px 0 #ff2d55, -1px 0 #2de2ff
+      }
+
+      80% {
+        text-shadow: none;
+        transform: translateY(-1px)
+      }
+    }
+
+    @keyframes jit {
+      50% {
+        filter: hue-rotate(60deg) brightness(1.4);
+        transform: translate(1px, -1px)
+      }
+    }
+
+    .p1 {
+      animation: ptg 7s infinite
+    }
+
+    @keyframes ptg {
+
+      0%,
+      93%,
+      100% {
+        text-shadow: 0 0 8px rgba(240, 217, 160, .35);
+        transform: none
+      }
+
+      94% {
+        text-shadow: 3px 0 #ff2d55, -3px 0 #2de2ff;
+        transform: translateX(-2px)
+      }
+
+      96% {
+        text-shadow: -3px 0 #ff2d55, 3px 0 #2de2ff;
+        transform: translateX(2px) skewX(-6deg)
+      }
+
+      98% {
+        text-shadow: 1px 0 #ff2d55, -1px 0 #2de2ff
+      }
+    }
+
+    .plate {
+      animation: flick 9s infinite
+    }
+
+    @keyframes flick {
+
+      0%,
+      90%,
+      100% {
+        filter: none
+      }
+
+      91% {
+        filter: brightness(.55)
+      }
+
+      92% {
+        filter: brightness(1.3)
+      }
+
+      93% {
+        filter: brightness(.7)
+      }
+
+      94% {
+        filter: none
+      }
+    }
+
+    /* energy flowing along the threads */
+    .k::before,
+    .kids::before {
+      background: linear-gradient(90deg, var(--lc, var(--pc)) 30%, #fff 50%, var(--lc, var(--pc)) 70%) 0 0/300% 100%;
+      animation: fx 3.4s linear infinite
+    }
+
+    .kids::before {
+      background: linear-gradient(90deg, var(--pc, var(--line)) 30%, #fff 50%, var(--pc, var(--line)) 70%) 0 0/300% 100%
+    }
+
+    .k::after {
+      background: linear-gradient(180deg, var(--lc) 30%, #fff 50%, var(--lc) 70%) 0 0/100% 300%;
+      animation: fy 4s linear infinite
+    }
+
+    @keyframes fx {
+      from {
+        background-position: 100% 0
+      }
+
+      to {
+        background-position: -100% 0
+      }
+    }
+
+    @keyframes fy {
+      from {
+        background-position: 0 100%
+      }
+
+      to {
+        background-position: 0 -100%
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+
+      .k::before,
+      .k::after,
+      .kids::before,
+      .p1,
+      .plate,
+      .warp,
+      #flash {
+        animation: none !important
+      }
+    }
+
+    .ln.dead {
+      color: #9a9ca2 !important;
+      text-shadow: none;
+      opacity: .85
+    }
+
+    .dd {
+      font-style: normal;
+      font-size: .8em;
+      opacity: .9;
+      letter-spacing: 0
+    }
+
+    .c.dead2 {
+      --g1: #171719;
+      --g2: #050506;
+      --pat: none;
+      --b: #3b3b41;
+      --glow: #55555d;
+      --tx: #8d8f95
+    }
+
+    .c.dead2 .av {
+      color: #8d8f95;
+      text-shadow: none
+    }
+
+    .c.dead2::after {
+      opacity: .12
+    }
+
+    #pop {
+      position: fixed;
+      z-index: 8;
+      display: none;
+      pointer-events: none;
+      gap: 10px;
+      padding: 8px;
+      border-radius: 12px;
+      background: rgba(10, 12, 14, .3);
+      border: 1px solid rgba(240, 217, 160, .4)
+    }
+
+    #pop.show {
+      animation: popin .22s
+    }
+
+    @keyframes popin {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(.94)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    #pop figure {
+      margin: 0;
+      width: 150px;
+      text-align: center
+    }
+
+    #pop img {
+      display: block;
+      width: 150px;
+      height: 190px;
+      object-fit: cover;
+      border-radius: 8px;
+      opacity: .5;
+      background: #0a0c0e;
+      box-shadow: 0 0 20px rgba(0, 0, 0, .6)
+    }
+
+    #pop figcaption {
+      font: 600 10.5px Cinzel, Georgia, serif;
+      color: #f0d9a0;
+      margin-top: 5px;
+      text-transform: uppercase;
+      opacity: .8
+    }
+
+    .ph {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 6px 0
+    }
+
+    .ph figure {
+      margin: 0;
+      width: 90px;
+      text-align: center;
+      font-size: 10px
+    }
+
+    .ph img {
+      width: 90px;
+      height: 110px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--bd);
+      background: #120e09
+    }
+
+    .pp {
+      border-top: 1px solid var(--bd);
+      padding-top: 6px;
+      margin-top: 6px
+    }
+
+    .ck {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap
+    }
+
+    .r .ck input {
+      flex: none;
+      width: auto;
+      min-width: 0
+    }
+
+    img.th {
+      width: 34px;
+      height: 34px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--bd)
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+      #pop.show {
+        animation: none
+      }
+    }
+
+    #banners {
+      display: flex;
+      gap: 10px;
+      padding: 18px 8px;
+      margin: -18px -8px 24px;
+      overflow-x: auto
+    }
+
+    #banners .plate {
+      flex: 1 0 150px;
+      min-width: 150px;
+      padding: 9px 26px;
+      margin: 0;
+      cursor: pointer;
+      transition: filter .45s, opacity .45s, transform .45s, box-shadow .45s;
+      animation: none
+    }
+
+    #banners .plate::before {
+      left: 9px
+    }
+
+    #banners .plate::after {
+      right: 9px
+    }
+
+    .p1 {
+      font-size: 13px
+    }
+
+    .p2 {
+      font-size: 11.5px
+    }
+
+    #banners .plate:not(.on) {
+      filter: grayscale(.85) brightness(.5);
+      opacity: .75;
+      transform: scale(.94)
+    }
+
+    #banners .plate:not(.on):hover {
+      filter: grayscale(.35) brightness(.85);
+      opacity: 1
+    }
+
+    #banners .plate:not(.on) .p1 {
+      animation: none
+    }
+
+    #banners .plate.on {
+      cursor: default;
+      transform: scale(1.03);
+      box-shadow: inset 0 0 0 2px #0e1015, inset 0 0 0 3px #f0d9a0, 0 0 0 2px #b8893f, 0 0 24px 5px rgba(240, 200, 110, .55);
+      animation: flick 9s infinite
+    }
+
+    #dv,
+    #dh {
+      position: absolute;
+      display: block;
+      pointer-events: none;
+      z-index: 2;
+      border-radius: 2px;
+      background: #f0d9a0;
+      box-shadow: 0 0 8px #f0d9a0, 0 0 18px rgba(240, 200, 110, .6)
+    }
+
+    #dv {
+      width: 3px
+    }
+
+    #dh {
+      height: 3px
+    }
+
+    #dv.go {
+      animation: dvg .45s both
+    }
+
+    #dh.go {
+      animation: dhg .5s .4s both
+    }
+
+    @keyframes dvg {
+      from {
+        transform: scaleY(0);
+        transform-origin: top
+      }
+
+      to {
+        transform: scaleY(1);
+        transform-origin: top
+      }
+    }
+
+    @keyframes dhg {
+      from {
+        transform: scaleX(0);
+        transform-origin: right
+      }
+
+      to {
+        transform: scaleX(1);
+        transform-origin: right
+      }
+    }
+
+    .kids.top::before,
+    .kids.top::after {
+      display: none
+    }
+
+    .kids.top>.k:first-child::after {
+      top: 0
+    }
+
+    .kids.top>.k:only-child::after {
+      display: block;
+      top: 0;
+      bottom: 50%
+    }
+
+    .kids.top>.k:only-child::before {
+      left: 0;
+      width: 26px
+    }
+
+    #tree.enter .k {
+      animation: kin .55s both;
+      animation-delay: calc(.85s + var(--i, 0)*var(--st, 40ms))
+    }
+
+    @keyframes kin {
+      from {
+        opacity: 0;
+        filter: blur(6px) brightness(2.2)
+      }
+
+      to {
+        opacity: 1;
+        filter: none
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+
+      #tree.enter .k,
+      #dv.go,
+      #dh.go {
+        animation: none !important
+      }
+    }
+
+    @media (max-width:720px) {
+
+      html,
+      body {
+        overflow-x: hidden
+      }
+
+      .bar {
+        padding: 6px 8px;
+        gap: 6px
+      }
+
+      .bar input {
+        min-width: 100px;
+        padding: 6px 8px;
+        font-size: 14px
+      }
+
+      .bar button {
+        padding: 6px 9px;
+        font-size: 11px
+      }
+
+      .leg {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 8px 8px 0;
+        scrollbar-width: none
+      }
+
+      .leg::-webkit-scrollbar {
+        display: none
+      }
+
+      .leg span {
+        white-space: nowrap;
+        flex: none
+      }
+
+      #banners {
+        scroll-snap-type: x mandatory;
+        gap: 8px;
+        padding: 14px 8px;
+        margin: -14px -4px 16px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch
+      }
+
+      #banners::-webkit-scrollbar {
+        display: none
+      }
+
+      #banners .plate {
+        flex: 0 0 138px;
+        min-width: 138px;
+        scroll-snap-align: center;
+        padding: 8px 18px
+      }
+
+      .wrap {
+        --u: .82;
+        padding: 8px 8px 100px;
+        overflow-x: hidden
+      }
+
+      .wrap.sz0 {
+        --u: .7
+      }
+
+      .wrap.sz2 {
+        --u: .95
+      }
+
+      .c {
+        font-size: 10.5px;
+        letter-spacing: .02em
+      }
+
+      .n {
+        flex-wrap: wrap
+      }
+
+      .n>.c {
+        min-width: 0;
+        max-width: calc(100% - 40px)
+      }
+
+      .n>.kids {
+        flex: 0 0 auto;
+        width: calc(100% - 26px*var(--u));
+        margin-left: calc(26px*var(--u));
+        margin-top: 2px
+      }
+
+      .kids.top {
+        margin-top: 0;
+        width: auto
+      }
+
+      .kids::before,
+      .kids::after {
+        display: none
+      }
+
+      .k {
+        padding-left: 14px;
+        --cy: calc(5px + 27px*var(--u))
+      }
+
+      .k::before {
+        width: 14px;
+        top: var(--cy)
+      }
+
+      .k>.n::before {
+        left: 7px;
+        top: var(--cy)
+      }
+
+      .k::after,
+      .k:first-child::after,
+      .kids.top>.k:first-child::after {
+        top: 0;
+        bottom: 0
+      }
+
+      .k:last-child::after {
+        bottom: auto;
+        height: calc(var(--cy) + 2px)
+      }
+
+      .k:only-child::after,
+      .kids.top>.k:only-child::after {
+        display: block;
+        top: 0;
+        bottom: auto;
+        height: calc(var(--cy) + 2px)
+      }
+
+      .kids>.k:only-child::before,
+      .kids.top>.k:only-child::before {
+        left: 0;
+        width: 14px
+      }
+
+      .tg {
+        width: 28px;
+        height: 28px;
+        margin-left: 6px;
+        font-size: 16px;
+        line-height: 22px
+      }
+
+      .side {
+        max-height: 68vh
+      }
+    }
+
+    /* readable passed-away names */
+    .ln.dead {
+      color: #d6d9df !important;
+      opacity: 1;
+      text-shadow: none
+    }
+
+    .ln.dead>span {
+      background: rgba(8, 9, 12, .55);
+      color: #d9dce2;
+      padding: 1px 7px;
+      border-radius: 6px;
+      text-shadow: none
+    }
+
+    .ln.dead .dd {
+      color: #eceef2;
+      opacity: 1
+    }
+
+    .c.dead2 {
+      --tx: #c9ccd3
+    }
+
+    .c.dead2 .av {
+      color: #c6c9d0
+    }
+
+    .c.dead2 .ln.dead>span {
+      background: none;
+      padding: 0
+    }
+
+    @media (max-width:720px) {
+      .wrap {
+        --u: 1;
+        --ch: 50px;
+        --av: 38px;
+        --kp: 10px;
+        padding: 10px 12px 120px
+      }
+
+      .wrap.sz0 {
+        --ch: 44px;
+        --av: 33px;
+        --kp: 8px
+      }
+
+      .wrap.sz2 {
+        --ch: 58px;
+        --av: 44px;
+        --kp: 12px
+      }
+
+      .c {
+        --ring: 0 0 0 1px #14100a, 0 0 0 2px var(--b);
+        min-height: var(--ch);
+        margin-left: calc(var(--av)*.45);
+        padding: 7px 24px 7px calc(var(--av)*.55 + 10px);
+        border-width: 1.5px;
+        font-size: 11px;
+        letter-spacing: .03em;
+        line-height: 1.3;
+        border-radius: 8px 12px 12px 8px;
+        box-shadow: var(--ring), 0 0 7px color-mix(in srgb, var(--glow) 38%, transparent), inset 0 0 0 1px rgba(255, 226, 160, .26), inset 0 5px 8px rgba(255, 255, 255, .1)
+      }
+
+      .c.sel {
+        box-shadow: var(--ring), 0 0 0 4px rgba(255, 255, 255, .9), 0 0 16px 4px var(--glow)
+      }
+
+      .c::after {
+        font-size: 18px;
+        right: 7px;
+        bottom: 1px;
+        opacity: .2
+      }
+
+      .av {
+        width: var(--av);
+        height: var(--av);
+        top: calc(var(--ch)/2);
+        margin-top: calc(var(--av)/-2);
+        left: calc(var(--av)*-.45);
+        font-size: 15px;
+        border-width: 2px;
+        box-shadow: 0 0 0 2px #b8893f, 0 0 7px var(--glow)
+      }
+
+      .av::before,
+      .av::after {
+        width: 6px;
+        height: 6px
+      }
+
+      .av::before {
+        top: -6px;
+        margin-left: -3px
+      }
+
+      .av::after {
+        bottom: -6px;
+        right: 5px
+      }
+
+      .c .t {
+        gap: 4px
+      }
+
+      .ln+.ln {
+        font-size: .97em
+      }
+
+      .n {
+        align-items: flex-start
+      }
+
+      .n>.c {
+        max-width: calc(100% - 44px)
+      }
+
+      .n>.kids {
+        width: calc(100% - var(--av)/2);
+        margin-left: calc(var(--av)/2);
+        margin-top: 6px
+      }
+
+      .kids.top {
+        margin-top: 0;
+        width: auto
+      }
+
+      .k {
+        padding: var(--kp) 0 var(--kp) 16px;
+        --cy: calc(var(--kp) + var(--ch)/2)
+      }
+
+      .k::before {
+        width: 16px;
+        height: 2px;
+        top: var(--cy)
+      }
+
+      .k::after {
+        width: 2px
+      }
+
+      .k>.n::before {
+        left: 9px;
+        width: 8px;
+        height: 8px;
+        margin-top: -4px;
+        top: var(--cy)
+      }
+
+      .k:last-child::after,
+      .k:only-child::after,
+      .kids.top>.k:only-child::after {
+        height: calc(var(--cy) + 1px)
+      }
+
+      .kids>.k:only-child::before,
+      .kids.top>.k:only-child::before {
+        width: 16px
+      }
+
+      .tg {
+        margin: calc(var(--ch)/2 - 14px) 0 0 6px
+      }
+
+      .ln {
+        gap: 8px
+      }
+
+      .bd {
+        font-size: .85em
+      }
+    }
+
+    #modal {
+      position: fixed;
+      inset: 0;
+      z-index: 9;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, .65);
+      padding: 14px
+    }
+
+    .mb {
+      width: min(560px, 100%);
+      max-height: 86vh;
+      overflow: auto;
+      background: linear-gradient(#2a2015, #17120c);
+      border: 2px solid #b8893f;
+      border-radius: 14px;
+      padding: 14px 16px;
+      color: var(--ink)
+    }
+
+    .mb h3 {
+      margin: 0 0 6px;
+      font: 700 17px var(--ff);
+      color: #f0d9a0
+    }
+
+    .mb .m {
+      opacity: .8;
+      margin: 4px 0
+    }
+
+    .mb input,
+    .mb textarea,
+    .side textarea {
+      width: 100%;
+      padding: 7px 9px;
+      margin: 4px 0;
+      border: 1px solid var(--bd);
+      border-radius: 8px;
+      background: #120e09;
+      color: var(--ink);
+      font: inherit
+    }
+
+    .mb button {
+      padding: 7px 12px;
+      border: 1px solid #b8893f;
+      border-radius: 7px;
+      background: linear-gradient(#3a2e20, #21190f);
+      color: #f0d9a0;
+      cursor: pointer;
+      font-family: var(--ff);
+      font-weight: 600;
+      margin: 6px 6px 0 0
+    }
+
+    .mb button:disabled {
+      opacity: .35;
+      cursor: not-allowed
+    }
+
+    .dl {
+      max-height: 190px;
+      overflow: auto;
+      font-size: 12px;
+      background: #120e09;
+      border: 1px solid var(--bd);
+      border-radius: 8px;
+      padding: 6px 9px;
+      margin: 6px 0
+    }
+
+    .dl div {
+      padding: 1px 0
+    }
+
+    .warn {
+      color: #ffb26b;
+      font-size: 12px;
+      margin: 4px 0
+    }
+
+    .bl {
+      flex: 0 0 38%;
+      font-size: 12px
+    }
+
+    .mb .r input {
+      margin: 3px 0
+    }
+
+    .nocontact .bd.e {
+      display: none
+    }
+
+    .mb a.btn {
+      display: inline-block;
+      padding: 7px 12px;
+      border: 1px solid #b8893f;
+      border-radius: 7px;
+      background: linear-gradient(#3a2e20, #21190f);
+      color: #f0d9a0;
+      text-decoration: none;
+      font: 600 13px var(--ff);
+      margin: 6px 6px 0 0
+    }
+
+    .mb .r {
+      flex-wrap: wrap
+    }
+  </style>
+</head>
+
+<body><canvas id="fx"></canvas>
+  <div id="spot"></div>
+  <div id="flash"></div>
+  <div id="pop"></div>
+  <div id="modal">
+    <div class="mb"><button class="x" id="mx">×</button>
+      <div id="mc"></div>
+    </div>
+  </div>
+  <div class="bar"><input id="q" type="search" placeholder="Search a name…"><button id="ea">Expand all</button><button
+      id="ca">Collapse</button><button id="sz" title="Card size">Aa Size</button><button id="ed">✏️ Edit</button><button
+      id="ab" class="edo" style="display:none">+ Add to branch</button><button id="sub" style="display:none">📤 Submit
+      changes</button><button id="dis" style="display:none">↩ Discard my changes</button><button id="gh">🔗 Connect
+      GitHub</button><button id="prs" style="display:none">📬 Requests</button><button id="in" style="display:none">🔑
+      Sign in</button><button id="out" style="display:none">Sign out</button><span class="st" id="who"></span><span
+      class="st" id="st"></span></div>
+  <div class="leg" id="leg"></div>
+  <div class="wrap" id="wrap">
+    <div id="banners"></div><i id="dv"></i><i id="dh"></i>
+    <div id="tree"></div>
+  </div>
+  <div class="side" id="side"></div>
+  <script>
+    let DATA = [];
+    const GEN = {blue: ['Sky blue', 'Main family couple (1st generation)', '#29abe2'], green: ['Green', '2nd generation', '#006d46'], orange: ['Orange', '3rd generation', '#d44d00'], purple: ['Velvet', '4th generation', '#a45cf0'], teal: ['Cyan', '5th generation', '#00a39e'], pink: ['Pink', 'Female who married', '#ff4fa8'], yellow: ['Yellow', 'Pastor / nun', '#ffce00']};
+    const RK = ['blue', 'green', 'orange', 'purple', 'teal'];
+    const LINKS = {}; // optional fixed links: LINKS["NAME"]="https://…"
+    const $ = id => document.getElementById(id);
+    const S = (k, v) => {try {if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v)} catch (e) {return null} };
+    const E = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    const PH = {}, NEWPH = {};
+    let role = 'viewer', BR = [], dirtyB = [], SENT = {}, ACCESS = null, META = [], GH = {user: S('gh:user') || '', token: S('gh:token') || ''}, LIVEJ = '[]', loaded = false;
+    let cur = 0, sel = null, ed = false, P = new Map(), open = new Set(), hits = new Set(), lastJ = '', tm = null;
+    $('leg').innerHTML = Object.values(GEN).map(g => '<span><b style="background:' + g[2] + '"></b>' + g[0] + ' = ' + g[1] + '</span>').join('') + '<span>✝ Grey name = passed away</span><span><b style="background:#000;color:#777"></b>Black slot = couple both passed away</span>';
+    const dead = (n, i) => typeof (n.dd || [])[i] === 'string';
+    const BGO = ['', 'A+', 'A−', 'B+', 'B−', 'AB+', 'AB−', 'O+', 'O−'];
+    function getPh(pid) {return Promise.resolve(PH[pid] || ('photos/' + pid + '.jpg'))}
+    function pick(n, i) {
+      const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*'; f.onchange = () => {
+        const file = f.files[0]; if (!file) return; const img = new Image(), u = URL.createObjectURL(file);
+        img.onload = () => {
+          const s = Math.min(1, 320 / Math.max(img.width, img.height)), cv = document.createElement('canvas'); cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s); cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); URL.revokeObjectURL(u);
+          const d = cv.toDataURL('image/jpeg', .72), pid = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); PH[pid] = d; NEWPH[pid] = d;
+          n.ph = n.ph || []; n.ph[i] = pid; ch(n)
+        }; img.src = u
+      }; f.click()
+    }
+    function reindex() {P = new Map(); DATA.forEach(r => (function f(n, p) {P.set(n.id, {n, p}); n.kids.forEach(k => f(k, n))})(r, null))}
+    const cnt = n => n.kids.reduce((a, k) => a + 1 + cnt(k), 0);
+    function path(id) {const a = []; let e = P.get(id); while (e && e.p) {e = P.get(e.p.id); if (e && e.n.names.length && e.p) a.unshift(e.n.names[0])} return a}
+    let IDX = 0; function node(n, vis = true) {
+      const k = document.createElement('div'); k.className = 'k ' + n.c; if (vis) k.style.setProperty('--i', IDX++); const row = document.createElement('div'); row.className = 'n';
+      const c = document.createElement('div'); c.className = 'c ' + n.c + (hits.has(n.id) ? ' hit' : '') + (sel && sel.id === n.id ? ' sel' : ''); c.dataset.id = n.id;
+      c.innerHTML = '<span class="av">' + E((n.names[0] || '?').trim().charAt(0)) + '</span><div class="t">' + n.names.map((x, i) => {const b = (n.bg || [])[i], d = dead(n, i); return '<div class="ln' + (d ? ' dead' : '') + '"><span>' + E(x) + (d ? '<em class="dd"> ✝' + (n.dd[i] ? ' ' + E(n.dd[i]) : '') + '</em>' : '') + '</span>' + (b ? '<b class="bd">🩸 ' + E(b) + '</b>' : (ed ? '<b class="bd e">🩸</b>' : '')) + '</div>'}).join('') + '</div>' + icons(n);
+      if (n.names.length > 1 && n.names.every((x, i) => dead(n, i))) c.classList.add('dead2');
+      c.onclick = () => show(n); row.appendChild(c);
+      if (n.kids.length) {
+        const o = open.has(n.id), t = document.createElement('button'); t.className = 'tg'; t.textContent = o ? '−' : '+'; row.appendChild(t);
+        const ks = document.createElement('div'); ks.className = 'kids'; ks.style.setProperty('--pc', ({blue: '#35b6ff', pink: '#ff4fa8', green: '#4ed05a', orange: '#ff8a2a', purple: '#b05cff', teal: '#22d6ff', yellow: '#ffc928'})[n.c]); if (!o) ks.style.display = 'none'; n.kids.forEach(x => ks.appendChild(node(x, vis && o))); row.appendChild(ks);
+        t.onclick = () => {const o2 = ks.style.display === 'none'; ks.style.display = o2 ? '' : 'none'; t.textContent = o2 ? '−' : '+'; o2 ? open.add(n.id) : open.delete(n.id)}
+      }
+      k.appendChild(row); return k
+    }
+    let ET = null, STEP = 40;
+    function render() {
+      $('pop').style.display = 'none'; const w = $('wrap'), sx = w.scrollLeft, sy = window.scrollY; banners(); const t = $('tree'); t.innerHTML = ''; IDX = 0; if (!DATA.length) {t.innerHTML = '<div class="m" style="padding:30px 6px">Loading the family tree…</div>'; return } const r = DATA[cur];
+      const h = document.createElement('div'); h.className = 'kids top'; h.style.margin = '0'; r.kids.forEach(x => h.appendChild(node(x, true))); t.appendChild(h);
+      STEP = Math.max(14, Math.min(60, 2400 / Math.max(IDX, 1))); t.style.setProperty('--st', STEP + 'ms'); w.scrollLeft = sx; window.scrollTo(window.scrollX, sy); place()
+    }
+    function banners() {
+      const b = $('banners'); b.innerHTML = ''; DATA.forEach((r, i) => {
+        const p = document.createElement('div'); p.className = 'plate' + (i === cur ? ' on' : '');
+        if (i === cur && ed && role === 'admin') {p.innerHTML = '<input class="pi" data-k="0" value="' + E(r.names[0]) + '"><input class="pi" data-k="1" value="' + E(r.names[1] || '') + '">'; p.querySelectorAll('.pi').forEach(inp => inp.onchange = () => {r.names[+inp.dataset.k] = inp.value.trim(); save(); banners(); place()})}
+        else p.innerHTML = '<div class="p1">' + E(r.names[0]) + '</div><div class="p2">' + E(r.names[1] || '') + '</div>';
+        if (i !== cur) {p.title = 'Open this branch'; p.onclick = () => {cur = i; render(); hide(); window.warp && warp(); enter(); const on = document.querySelector('#banners .plate.on'); on && on.scrollIntoView({inline: 'center', block: 'nearest'}); place()}}
+        b.appendChild(p)
+      })
+    }
+    function place() {
+      const w = $('wrap'), p = document.querySelector('#banners .plate.on'); if (!p) return; const wr = w.getBoundingClientRect(), pr = p.getBoundingClientRect(), tr = $('tree').getBoundingClientRect();
+      const cx = pr.left + pr.width / 2 - wr.left + w.scrollLeft - 1.5, pb = pr.bottom - wr.top + w.scrollTop, tt = tr.top - wr.top + w.scrollTop, tl = tr.left - wr.left + w.scrollLeft, dv = $('dv'), dh = $('dh');
+      dv.style.cssText = 'left:' + cx + 'px;top:' + (pb - 2) + 'px;height:' + Math.max(0, tt - pb + 2) + 'px'; const wd = cx + 3 - tl; dh.style.cssText = 'left:' + tl + 'px;top:' + (tt - 4) + 'px;width:' + Math.max(0, wd) + 'px;display:' + (wd > 0 ? 'block' : 'none')
+    }
+    function enter() {const t = $('tree'); t.classList.remove('enter'); void t.offsetWidth; t.classList.add('enter');['dv', 'dh'].forEach(i => {const d = $(i); d.classList.remove('go'); void d.offsetWidth; d.classList.add('go')}); clearTimeout(ET); ET = setTimeout(() => t.classList.remove('enter'), 850 + IDX * STEP + 700)}
+    function setAll(o) {open.clear(); if (o) P.forEach(({n}, id) => {if (n.kids.length) open.add(id)}); render()}
+    let sz = 1; $('sz').onclick = () => {sz = (sz + 1) % 3; document.querySelector('.wrap').className = 'wrap sz' + sz};
+    $('ea').onclick = () => setAll(true); $('ca').onclick = () => setAll(false);
+    $('q').oninput = ev => {
+      const v = ev.target.value.trim().toUpperCase(); hits = new Set();
+      if (v.length >= 2) {
+        let first = null; P.forEach(({n}, id) => {if (n.names.join(' ').toUpperCase().includes(v)) {hits.add(id); if (first === null) first = id} });
+        hits.forEach(id => {let e = P.get(id); while (e && e.p) {open.add(e.p.id); e = P.get(e.p.id)} });
+        if (first) {let e = P.get(first); while (e.p) e = P.get(e.p.id); cur = DATA.indexOf(e.n)}
+      }
+      render(); const h = document.querySelector('.c.hit'); h && h.scrollIntoView({block: 'center', inline: 'center'})
+    };
+    function st(t) {$('st').textContent = t}
+    function mk(names, c) {return {id: 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), names, c, kids: []}}
+    function ch(n) {reindex(); save(); render(); show(n)}
+    function show(n) {
+      sel = n; document.querySelectorAll('.c.sel').forEach(e => e.classList.remove('sel')); const ce = document.querySelector('.c[data-id="' + n.id + '"]'); ce && ce.classList.add('sel'); const s = $('side'), pth = path(n.id); let h = '<button class="x" onclick="hide()">×</button>';
+      const em = ed && canEditNode(n); if (!em) {
+        h += '<h3>' + n.names.map(E).join(' &amp; ') + '</h3><div class="m">' + (GEN[n.c] ? GEN[n.c][1] + '<br>' : '') + (pth.length ? 'Line: ' + pth.map(E).join(' → ') + '<br>' : '') + (n.bg && n.bg.some(Boolean) ? 'Blood group: ' + n.names.map((x, i) => n.bg[i] ? E(x) + ' — ' + E(n.bg[i]) : '').filter(Boolean).join(' · ') + '<br>' : '') + (n.dd && n.dd.some(x => typeof x === 'string') ? '✝ Passed away: ' + n.names.map((x, i) => dead(n, i) ? E(x) + (n.dd[i] ? ' — ' + E(n.dd[i]) : '') : '').filter(Boolean).join(' · ') + '<br>' : '') + (n.kids.length ? 'Descendants shown: ' + cnt(n) + ' · Children boxes: ' + n.kids.length : 'No children listed') + '</div>' + (n.kids.length ? '<div class="m">' + n.kids.map(x => E(x.names.join(' & '))).join(' · ') + '</div>' : '') + (ME || PUBLIC ? '' : '<div class="m">🔒 Phone, address and blood group are shown to signed-in family members.</div>') + '<div class="ph" id="vph"></div>';
+        h += contact(n); const l = n.link || LINKS[n.names[0]] || ''; h += /^https?:/.test(l) ? '<div class="m"><a href="' + E(l) + '" target="_blank" rel="noopener">Open link</a></div>' : (ed && !em ? '<div class="warn">You can edit only your assigned branches (' + E(BR.map(b => DATA[b] ? DATA[b].names[0] : '').join(', ')) + ').</div>' : '<div class="m">Tap ✏️ Edit to rename people, add a link, phone, address, blood group, or family members.</div>')
+      }
+      else {
+        h += '<h3>Edit member</h3>' + n.names.map((x, i) => '<div class="pp"><div class="r"><input class="nm" data-i="' + i + '" value="' + E(x) + '" placeholder="' + (i ? 'Spouse / partner' : 'Name') + '"><select class="bgs" data-i="' + i + '" title="Blood group">' + BGO.map(g => '<option value="' + g + '"' + (g === ((n.bg || [])[i] || '') ? ' selected' : '') + '>' + (g ? '🩸 ' + g : '🩸 —') + '</option>').join('') + '</select>' + (n.names.length > 1 ? '<button data-rm="' + i + '">×</button>' : '') + '</div><div class="r"><label class="ck"><input type="checkbox" class="dc" data-i="' + i + '"' + (dead(n, i) ? ' checked' : '') + '> ✝ Passed away</label><input class="dt" data-i="' + i + '" placeholder="Year or date" value="' + E(dead(n, i) ? (n.dd[i] || '') : '') + '"' + (dead(n, i) ? '' : ' disabled') + '></div><div class="r"><button class="up" data-i="' + i + '">📷 ' + ((n.ph || [])[i] ? 'Change' : 'Add') + ' photo</button>' + ((n.ph || [])[i] ? '<button class="rp" data-i="' + i + '">Remove</button><img class="th" alt="" data-pid="' + n.ph[i] + '">' : '') + '</div></div>').join('')
+        + '<button id="an">+ Spouse / name line</button><div class="m">Category</div><select id="cat">' + Object.keys(GEN).map(k => '<option value="' + k + '"' + (k === n.c ? ' selected' : '') + '>' + GEN[k][0] + ' — ' + GEN[k][1] + '</option>').join('') + '</select><div class="m">Link</div><input id="lk" value="' + E(n.link || '') + '" placeholder="https://… (photo, profile, document)"><div class="m">📞 Phone number</div><input id="tel" type="tel" value="' + E(n.tel || '') + '" placeholder="+91 …"><div class="m">📍 Address</div><textarea id="addr" rows="2" placeholder="House, street, town">' + E(n.addr || '') + '</textarea><div class="r"><button id="ac">+ Add child</button><button id="dl" class="dn">Delete</button></div>'
+      }
+      s.innerHTML = h; s.style.display = 'block';
+      if (NOCONTACT) s.querySelectorAll('#tel,#addr,.bgs').forEach(e => {const p = e.previousElementSibling; e.style.display = 'none'; if (p && p.classList.contains('m')) p.style.display = 'none'});
+      if (!em) {const v = $('vph'); (n.ph || []).forEach((p, i) => {if (!p) return; const f = document.createElement('figure'); f.innerHTML = '<img alt=""><figcaption>' + E(n.names[i]) + '</figcaption>'; v.appendChild(f); getPh(p).then(u => {if (u) f.firstChild.src = u})}); return }
+      s.querySelectorAll('.nm').forEach(i => i.onchange = () => {n.names[+i.dataset.i] = i.value.trim() || '?'; ch(n)});
+      s.querySelectorAll('.bgs').forEach(i => i.onchange = () => {n.bg = n.bg || []; n.bg[+i.dataset.i] = i.value; ch(n)});
+      s.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => {const i = +b.dataset.rm; n.names.splice(i, 1); n.bg && n.bg.splice(i, 1); n.dd && n.dd.splice(i, 1); n.ph && n.ph.splice(i, 1); ch(n)});
+      s.querySelectorAll('.dc').forEach(c => c.onchange = () => {n.dd = n.dd || []; n.dd[+c.dataset.i] = c.checked ? '' : null; ch(n)});
+      s.querySelectorAll('.dt').forEach(c => c.onchange = () => {n.dd = n.dd || []; n.dd[+c.dataset.i] = c.value.trim(); ch(n)});
+      s.querySelectorAll('.up').forEach(b => b.onclick = () => pick(n, +b.dataset.i));
+      s.querySelectorAll('.rp').forEach(b => b.onclick = () => {n.ph[+b.dataset.i] = null; ch(n)});
+      s.querySelectorAll('img.th').forEach(im => getPh(im.dataset.pid).then(u => {if (u) im.src = u}));
+      $('an').onclick = () => {n.names.push('NEW NAME'); ch(n)}; $('cat').onchange = ev => {n.c = ev.target.value; ch(n)}; $('lk').onchange = ev => {n.link = ev.target.value.trim(); ch(n)}; $('tel').onchange = ev => {n.tel = ev.target.value.trim(); ch(n)}; $('addr').onchange = ev => {n.addr = ev.target.value.trim(); ch(n)};
+      $('ac').onclick = () => {const r = RK.indexOf(n.c), k = mk(['NEW PERSON'], r >= 0 ? RK[Math.min(r + 1, 4)] : 'pink'); n.kids.push(k); open.add(n.id); reindex(); save(); render(); show(k); const i = document.querySelector('.nm'); i && i.select()};
+      $('dl').onclick = function () {if (this.dataset.s !== '1') {this.dataset.s = '1'; this.textContent = 'Tap again to confirm'; return } const pe = P.get(n.id); pe.p.kids.splice(pe.p.kids.indexOf(n), 1); sel = null; reindex(); save(); render(); hide()}
+    }
+    let hov = null; const pop = $('pop');
+    $('tree').addEventListener('mouseover', e => {
+      if (matchMedia('(hover:none)').matches) return; const c = e.target.closest('.c'); if (!c || c === hov) return; hov = c; const pe = P.get(c.dataset.id); if (!pe) return; const n = pe.n, items = (n.ph || []).map((p, i) => p ? {p, name: n.names[i]} : null).filter(Boolean); if (!items.length) {pop.style.display = 'none'; return }
+      pop.innerHTML = items.map(() => '<figure><img alt=""><figcaption></figcaption></figure>').join(''); items.forEach((it, i) => {const f = pop.children[i]; f.lastChild.textContent = it.name; getPh(it.p).then(u => {if (u && hov === c) f.firstChild.src = u})});
+      const r = c.getBoundingClientRect(), w = items.length * 150 + (items.length - 1) * 10 + 18, h = 236; pop.style.display = 'flex'; pop.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px'; pop.style.top = (r.top - h - 8 < 60 ? r.bottom + 8 : r.top - h - 8) + 'px'; pop.classList.remove('show'); void pop.offsetWidth; pop.classList.add('show')
+    });
+    $('tree').addEventListener('mouseout', e => {const c = e.target.closest('.c'); if (c && !c.contains(e.relatedTarget)) {hov = null; pop.style.display = 'none'} });
+    function hide() {$('side').style.display = 'none'}
+    $('ed').onclick = () => {if (!ME && !PUBLIC) {location.href = '/login.html?next=/'; return } if (role === 'viewer') {ghDialog(); return } ed = !ed; $('ed').classList.toggle('on', ed); document.querySelectorAll('.edo').forEach(e => e.style.display = ed ? '' : 'none'); render(); st(ed ? 'Your changes become a pull request that the admin reviews' : ''); if (sel && $('side').style.display === 'block') show(sel)};
+    $('ab').onclick = () => {if (!mine(cur)) {st('You can add only to your assigned branches'); return } const k = mk(['NEW PERSON'], 'blue'); DATA[cur].kids.push(k); reindex(); save(); render(); show(k); const i = document.querySelector('.nm'); i && i.select()};
+    reindex(); DATA.forEach(r => r.kids.forEach(k => open.add(k.id)));
+    (function () {
+      const cv = $('fx'), cx = cv.getContext('2d'); let W, H, mx = .5, my = .4, fl = 1, ft = 0, T = 0;
+      const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const nz = document.createElement('canvas'); nz.width = nz.height = 160; const nx = nz.getContext('2d');
+      function noise() {const id = nx.createImageData(160, 160), d = id.data; for (let i = 0; i < d.length; i += 4) {const v = Math.random() * 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255} nx.putImageData(id, 0, 0)}
+      noise(); const P = [];
+      function size() {W = cv.width = innerWidth; H = cv.height = innerHeight; P.length = 0; const n = Math.min(90, Math.floor(W * H / 16000)); for (let i = 0; i < n; i++)P.push({x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.6 + .4, s: Math.random() * .25 + .05, p: Math.random() * 6.28, z: Math.random()})}
+      addEventListener('resize', size); size();
+      addEventListener('pointermove', e => {mx = e.clientX / W; my = e.clientY / H; const r = document.documentElement.style; r.setProperty('--mx', e.clientX + 'px'); r.setProperty('--my', e.clientY + 'px')}, {passive: true});
+      let gn = -1, run = false;
+      function frame(t) {
+        T = t / 1000;
+        if (t > ft) {fl = Math.random() < .18 ? .35 + Math.random() * .4 : 1; ft = t + (fl < 1 ? 40 + Math.random() * 80 : 600 + Math.random() * 3200)}
+        const g = cx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0b1317'); g.addColorStop(.6, '#070b0e'); g.addColorStop(1, '#040607');
+        cx.globalAlpha = 1; cx.globalCompositeOperation = 'source-over'; cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+        cx.save(); cx.globalCompositeOperation = 'lighter';
+        const bx = W * (.5 + .08 * Math.sin(T * .15) + (mx - .5) * .06);
+        for (let i = 0; i < 3; i++) {const x0 = bx + (i - 1) * W * .18, sw = Math.sin(T * .2 + i) * W * .03; const gr = cx.createLinearGradient(x0, 0, x0 + sw, H * .9); gr.addColorStop(0, 'rgba(140,190,205,' + (.11 * fl) + ')'); gr.addColorStop(1, 'rgba(140,190,205,0)'); cx.fillStyle = gr; cx.beginPath(); cx.moveTo(x0 - 18, 0); cx.lineTo(x0 + 18, 0); cx.lineTo(x0 + sw + W * .12, H * .9); cx.lineTo(x0 + sw - W * .12, H * .9); cx.closePath(); cx.fill()}
+        for (let i = 0; i < 5; i++) {const q = ((i * .37 + T * .01 * (i % 2 ? 1 : -1)) % 1 + 1) % 1, fx = W * (.15 + .7 * q), fy = H * (.3 + .5 * Math.abs(Math.sin(T * .05 + i * 1.7))), r = Math.max(W, H) * .45; const gr = cx.createRadialGradient(fx, fy, 0, fx, fy, r); gr.addColorStop(0, 'rgba(80,120,135,.07)'); gr.addColorStop(1, 'rgba(80,120,135,0)'); cx.fillStyle = gr; cx.fillRect(0, 0, W, H)}
+        cx.restore();
+        for (const p of P) {
+          p.y -= p.s; p.x += Math.sin(T * .3 + p.p) * .12; if (p.y < -5) {p.y = H + 5; p.x = Math.random() * W}
+          cx.globalAlpha = (.15 + .35 * Math.abs(Math.sin(T * .8 + p.p))) * fl; cx.fillStyle = '#bcd8e0'; cx.beginPath(); cx.arc(p.x + (mx - .5) * -30 * p.z, p.y + (my - .5) * -20 * p.z, p.r, 0, 6.283); cx.fill()
+        }
+        const n = (t / 90) | 0; if (!rm && n !== gn) {gn = n; noise()}
+        cx.globalAlpha = .07; cx.globalCompositeOperation = 'overlay'; cx.fillStyle = cx.createPattern(nz, 'repeat'); cx.save(); cx.translate(Math.random() * 160, Math.random() * 160); cx.fillRect(-160, -160, W + 320, H + 320); cx.restore();
+        cx.globalCompositeOperation = 'source-over'; cx.globalAlpha = 1;
+        if (!rm && !document.hidden) requestAnimationFrame(frame); else run = false
+      }
+      function go() {if (!run) {run = true; requestAnimationFrame(frame)} }
+      go(); document.addEventListener('visibilitychange', () => {if (!document.hidden && !rm) go()});
+      window.warp = function () {if (rm) return; const f = $('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go')}
+    })();
+
+    render(); enter(); {const on = document.querySelector('#banners .plate.on'); on && on.scrollIntoView({inline: 'center', block: 'nearest'})} addEventListener('resize', place); $('banners').addEventListener('scroll', place); document.fonts && document.fonts.ready.then(place);
+    /* ---- viewing + pull-request editing ---- */
+    const rootIdx = n => {let e = P.get(n.id); while (e && e.p) e = P.get(e.p.id); return e ? DATA.indexOf(e.n) : -1};
+    const mine = b => role === 'admin' || (role === 'editor' && BR.includes(b));
+    const canEditNode = n => mine(rootIdx(n));
+    const hash = s => {let h = 0; for (let i = 0; i < s.length; i++)h = (h * 31 + s.charCodeAt(i)) | 0; return h};
+    const REPO = () => {const r = (ACCESS && ACCESS.repo) || ''; return /^[\w.-]+\/[\w.-]+$/.test(r) && !r.startsWith('YOUR_') ? r : ''};
+    function icons(n) {const a = ((n.link || LINKS[n.names[0]]) ? '🔗' : '') + ((n.ph || []).some(Boolean) ? '📷' : '') + (n.tel ? '📞' : '') + (n.addr ? '📍' : ''); return a ? '<i>' + a + '</i>' : ''}
+    function contact(n) {return (n.tel ? '<div class="m">📞 <a href="tel:' + E(String(n.tel).replace(/[^\d+]/g, '')) + '">' + E(n.tel) + '</a></div>' : '') + (n.addr ? '<div class="m">📍 ' + E(n.addr) + ' · <a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(n.addr) + '">Map</a></div>' : '')}
+    function flat(root) {const m = new Map(); (function f(n, pn) {n.kids.forEach(k => {m.set(k.id, {n: k, p: pn}); f(k, k)})})(root, root); return m}
+    const lab = n => n.names.join(' & ');
+    function diff(a, b) {const A = flat(a), B = flat(b), o = []; B.forEach(({n, p}, id) => {const x = A.get(id); if (!x) o.push('➕ ' + lab(n) + '  (under ' + lab(p) + ')'); else {const y = x.n; if (lab(y) !== lab(n)) o.push('✏️ ' + lab(y) + ' → ' + lab(n)); const c = [];[['c', 'colour'], ['tel', 'phone'], ['addr', 'address'], ['link', 'link']].forEach(([k, l]) => {if ((y[k] || '') !== (n[k] || '')) c.push(l)});[['bg', 'blood group'], ['dd', 'passed away'], ['ph', 'photo']].forEach(([k, l]) => {if (JSON.stringify(y[k] || []) !== JSON.stringify(n[k] || [])) c.push(l)}); if (c.length) o.push('✏️ ' + lab(n) + ': ' + c.join(', ') + ' changed')} }); A.forEach(({n}, id) => {if (!B.has(id)) o.push('➖ ' + lab(n) + ' removed')}); return o}
+    const dlist = d => '<div class="dl">' + (d && d.length ? d.slice(0, 40).map(x => '<div>' + E(x) + '</div>').join('') + (d.length > 40 ? '<div>…and ' + (d.length - 40) + ' more</div>' : '') : '<div>No changes found</div>') + '</div>';
+    function modal(h, fn) {$('mc').dataset.k = ''; $('mc').innerHTML = h; $('modal').style.display = 'flex'; fn && fn($('mc'))}
+    $('mx').onclick = () => $('modal').style.display = 'none';
+
+    /* roles come from data/access.json (in git) + the GitHub username the visitor enters */
+    function resolveRole() {
+      const u = (GH.user || '').toLowerCase(); BR = []; role = 'viewer'; if (!u || !ACCESS) return;
+      if (u === String(ACCESS.admin || '').toLowerCase()) {role = 'admin'; BR = META.map((x, i) => i); return }
+      const e = Object.entries(ACCESS.users || {}).find(([k]) => k.toLowerCase() === u);
+      if (e) {BR = e[1].map(f => META.indexOf(f)).filter(i => i >= 0); if (BR.length) role = 'editor'}
+    }
+    const unsentB = () => dirtyB.filter(b => DATA[b] && SENT[b] !== hash(JSON.stringify(DATA[b])));
+    function refreshDirty() {
+      let L = []; try {L = JSON.parse(LIVEJ)} catch (x) { }
+      dirtyB = BR.filter(b => L[b] && DATA[b] && JSON.stringify(DATA[b]) !== JSON.stringify(L[b]));
+      const dr = {}; dirtyB.forEach(b => dr[b] = DATA[b]); if (GH.user) S('draft:' + GH.user.toLowerCase(), dirtyB.length ? JSON.stringify(dr) : null); setRole()
+    }
+    function loadDrafts() {dirtyB = []; if (!GH.user || !BR.length) return; try {const dr = JSON.parse(S('draft:' + GH.user.toLowerCase()) || '{}'); Object.keys(dr).forEach(b => {if (BR.includes(+b) && DATA[+b]) DATA[+b] = dr[b]}); reindex(); refreshDirty()} catch (x) { } }
+    function setRole() {
+      const ok = role === 'admin' || role === 'editor';
+      $('who').textContent = (ME ? ME.name + ' · ' : '') + (role === 'admin' ? '👑 Admin · @' + GH.user : role === 'editor' ? '✏️ @' + GH.user : GH.user ? '👁 @' + GH.user + ' (no branches assigned)' : (ME || PUBLIC ? '👁 View only' : '👁 Public view'));
+      $('gh').style.display = (ME || PUBLIC) ? '' : 'none'; $('gh').textContent = GH.user ? '🔗 @' + GH.user : '🔗 Connect GitHub';
+      $('sub').style.display = ok && unsentB().length ? '' : 'none'; $('dis').style.display = ok && dirtyB.length ? '' : 'none'; $('prs').style.display = REPO() ? '' : 'none'
+    }
+    function save() {refreshDirty(); st('Draft kept on this device — tap “Submit changes” to send it as a pull request')}
+    function apply() { }
+
+    /* ---- GitHub connection ---- */
+    async function ghApi(path, opt) {
+      const r = await fetch('https://api.github.com' + path, Object.assign({}, opt, {headers: Object.assign({'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + GH.token, 'X-GitHub-Api-Version': '2022-11-28'}, (opt && opt.headers) || {})}));
+      if (!r.ok) {let t = ''; try {t = await r.text()} catch (x) { } const e = new Error(r.status + ' ' + t.slice(0, 160)); e.status = r.status; throw e} return r.status === 204 ? null : r.json()
+    }
+    function ghDialog() {
+      modal('<h3>Connect your GitHub account</h3><div class="m">Your changes become a <b>pull request</b> that the admin reviews and merges. Enter your GitHub username. A token is optional: with one, the site creates the pull request for you.</div><input id="gu" placeholder="GitHub username" value="' + E(GH.user) + '" autocapitalize="none" autocomplete="off"><input id="gt" type="password" placeholder="Token (optional)" value="' + E(GH.token) + '" autocomplete="off"><div class="m">Create a <i>fine-grained</i> token at github.com/settings/personal-access-tokens for <b>this repository only</b> with <b>Contents: read &amp; write</b> and <b>Pull requests: read &amp; write</b>. It stays on this device only. No token? You can still send changes — the site shows you what to paste into GitHub.</div><button id="gs">Save</button>' + (GH.user ? '<button id="gx" class="dn">Disconnect</button>' : '') + '<div id="gm" class="warn"></div>', m => {
+        const msg = t => m.querySelector('#gm').textContent = t;
+        m.querySelector('#gs').onclick = async () => {
+          const u = m.querySelector('#gu').value.trim().replace(/^@/, ''), t = m.querySelector('#gt').value.trim(); if (!/^[A-Za-z0-9-]{1,39}$/.test(u)) {msg('Enter a valid GitHub username.'); return }
+          if (t) {try {GH.token = t; const me = await ghApi('/user'); if (String(me.login).toLowerCase() !== u.toLowerCase()) {GH.token = ''; msg('That token belongs to @' + me.login + ', not @' + u + '.'); return } } catch (x) {GH.token = ''; msg('GitHub did not accept that token (' + (x.status || 'network') + ').'); return } } else GH.token = '';
+          GH.user = u; S('gh:user', u); S('gh:token', GH.token || null); resolveRole(); loadDrafts(); render(); setRole(); $('modal').style.display = 'none';
+          st(role === 'viewer' ? '@' + u + ' has no branches assigned yet — ask the admin to add you to data/access.json' : 'Connected as @' + u)
         };
-      });
-  }
-  // Visible version tag, so you can tell whether the new page is the one being served.
-  try { const v = document.createElement('span'); v.className = 'st'; v.id = 'ds-ver'; v.style.opacity = '.45'; v.style.marginLeft = '8px'; v.textContent = 'build admin-save-5'; ($('st') && $('st').parentNode ? $('st').parentNode : document.body).appendChild(v); } catch (x) {}
-})();
+        const x = m.querySelector('#gx'); if (x) x.onclick = () => {GH = {user: '', token: ''}; S('gh:user', null); S('gh:token', null); if (ed) {ed = false; $('ed').classList.remove('on'); document.querySelectorAll('.edo').forEach(e => e.style.display = 'none')} resolveRole(); dirtyB = []; setRole(); render(); $('modal').style.display = 'none'}
+      })
+    }
+    $('gh').onclick = ghDialog;
+    $('prs').onclick = () => window.open('https://github.com/' + REPO() + '/pulls', '_blank', 'noopener');
 
-</script></body></html>
+    /* ---- send changes as a pull request ---- */
+    const branchJson = b => JSON.stringify({id: DATA[b].id, names: DATA[b].names, kids: DATA[b].kids}, null, 2) + '\n';
+    const b64 = s => btoa(unescape(encodeURIComponent(s)));
+    function newPhotos(bs) {const o = {}; bs.forEach(b => (function f(n) {(n.ph || []).forEach(p => {if (p && NEWPH[p]) o[p] = NEWPH[p]}); n.kids.forEach(f)})(DATA[b])); return o}
+    async function createPR(bs, note) {
+      const repo = REPO(), L = JSON.parse(LIVEJ), ph = newPhotos(bs);
+      const base = (await ghApi('/repos/' + repo + '/git/ref/heads/main')).object.sha, name = 'edit/' + GH.user.toLowerCase() + '-' + Date.now().toString(36);
+      await ghApi('/repos/' + repo + '/git/refs', {method: 'POST', body: JSON.stringify({ref: 'refs/heads/' + name, sha: base})});
+      const put = async (path, b64c, msg) => {
+        let sha; try {sha = (await ghApi('/repos/' + repo + '/contents/' + path + '?ref=' + encodeURIComponent(name))).sha} catch (x) {if (x.status !== 404) throw x}
+        await ghApi('/repos/' + repo + '/contents/' + path, {method: 'PUT', body: JSON.stringify({message: msg, content: b64c, branch: name, sha})})
+      };
+      for (const id of Object.keys(ph)) await put('data/photos/' + id + '.jpg', ph[id].split(',')[1], 'Add photo ' + id);
+      for (const b of bs) await put('data/branches/' + META[b], b64(branchJson(b)), 'Update ' + DATA[b].names.join(' / '));
+      const lines = bs.map(b => '**' + DATA[b].names.join(' / ') + '**\n' + diff(L[b], DATA[b]).slice(0, 60).map(x => '- ' + x).join('\n')).join('\n\n');
+      return ghApi('/repos/' + repo + '/pulls', {method: 'POST', body: JSON.stringify({title: '@' + GH.user + ': update ' + bs.map(b => DATA[b].names[0]).join(', '), head: name, base: 'main', body: (note ? '> ' + note.replace(/\n/g, '\n> ') + '\n\n' : '') + lines})})
+    }
+    function manualHtml(bs, ph) {
+      const repo = REPO(); if (!repo) return '<div class="m">The repository is not configured in data/access.json.</div>';
+      return '<div class="m">1. Copy the updated file. 2. Open it on GitHub, select all, paste. 3. “Commit changes” → choose <b>Create a new branch and start a pull request</b>.</div>'
+        + bs.map(b => '<div class="r"><button class="cp" data-b="' + b + '">Copy ' + E(DATA[b].names[0]) + '</button><a class="btn" target="_blank" rel="noopener" href="https://github.com/' + repo + '/edit/main/data/branches/' + encodeURIComponent(META[b]) + '">Open on GitHub</a></div>').join('')
+        + (Object.keys(ph).length ? '<div class="m">New photos — download them, then add them in the same pull request (<a target="_blank" rel="noopener" href="https://github.com/' + repo + '/upload/main/data/photos">upload page</a>):</div>' + Object.keys(ph).map(id => '<a class="btn" download="' + id + '.jpg" href="' + ph[id] + '">⬇ ' + id + '.jpg</a>').join('') : '')
+    }
+    $('sub').onclick = () => {
+      const L = JSON.parse(LIVEJ), bs = unsentB(), ph = newPhotos(bs);
+      modal('<h3>Send your changes</h3>' + bs.map(b => '<div class="m"><b>' + E(DATA[b].names.join(' / ')) + '</b></div>' + dlist(diff(L[b], DATA[b]))).join('') + '<textarea id="nt" rows="2" placeholder="Note for the admin (optional)"></textarea>' + (GH.token ? '<button id="go">Create pull request</button><div class="m">Or do it by hand:</div>' : '<div class="m">No token connected — do it by hand:</div>') + manualHtml(bs, ph) + '<div id="gm" class="warn"></div>', m => {
+        m.querySelectorAll('.cp').forEach(b => b.onclick = async () => {try {await navigator.clipboard.writeText(branchJson(+b.dataset.b)); b.textContent = 'Copied ✔'} catch (x) {b.textContent = 'Copy failed'} });
+        const go = m.querySelector('#go'); if (go) go.onclick = async () => {go.disabled = true; go.textContent = 'Creating…'; try {const pr = await createPR(bs, m.querySelector('#nt').value.slice(0, 500)); bs.forEach(b => {SENT[b] = hash(JSON.stringify(DATA[b]))}); setRole(); m.innerHTML = '<h3>✅ Pull request created</h3><div class="m">The admin will review it. You will get a GitHub email when it is merged or closed.</div><a class="btn" target="_blank" rel="noopener" href="' + E(pr.html_url) + '">Open the pull request</a>'} catch (x) {go.disabled = false; go.textContent = 'Create pull request'; m.querySelector('#gm').textContent = 'Could not create it (' + (x.message || 'error').slice(0, 120) + '). You can use the manual steps below.'} }
+      })
+    };
+    $('dis').onclick = () => {const L = JSON.parse(LIVEJ); dirtyB.forEach(b => {DATA[b] = L[b]; delete SENT[b]}); dirtyB = []; if (GH.user) S('draft:' + GH.user.toLowerCase(), null); reindex(); sel = null; hide(); render(); setRole(); st('Back to the published version')};
+
+    /* ---- sign-in session (login is checked on the server) ---- */
+    let ME = null;
+    async function whoami() {
+      try {const r = await fetch('/api/me', {cache: 'no-store', credentials: 'same-origin'}); if (r.ok) {const j = await r.json(); ME = j && j.user ? j : null} } catch (x) { }
+      if (ME) {$('out').style.display = ''; $('in').style.display = 'none'; if (S('gh:for') !== ME.user) {GH = {user: '', token: ''}; S('gh:user', null); S('gh:token', null); S('gh:for', ME.user)} if (ME.github && GH.user.toLowerCase() !== ME.github.toLowerCase()) {GH = {user: ME.github, token: ''}; S('gh:user', ME.github); S('gh:token', null)} }
+      else {$('in').style.display = ''; $('out').style.display = 'none'; GH = {user: '', token: ''};['gh:user', 'gh:token', 'gh:for'].forEach(k => S(k, null))} return true
+    }
+    $('in').onclick = () => {location.href = '/login.html'};
+    $('out').onclick = async () => {try {await fetch('/api/logout', {method: 'POST', credentials: 'same-origin'})} catch (x) { } ['gh:user', 'gh:token', 'gh:for'].forEach(k => S(k, null)); location.replace('/')};
+
+    /* ---- load the published data ---- */
+    let PUBLIC = false, NOCONTACT = false;
+    async function loadAccess() {try {const r = await fetch('access.json', {cache: 'no-store', credentials: 'same-origin'}); if (r.ok) return await r.json()} catch (x) { } return null}
+    (async () => {
+      try {
+        let a = await loadAccess(); PUBLIC = !!(a && a.mode === 'public'); NOCONTACT = PUBLIC && a.allowContact !== true; document.body.classList.toggle('nocontact', NOCONTACT);
+        if (!PUBLIC) {await whoami(); if (ME && !a) a = await loadAccess()}
+        const d = await fetch('data.json', {cache: 'no-store', credentials: 'same-origin'}).then(r => {if (!r.ok) throw new Error('data ' + r.status); return r.json()});
+        ACCESS = a; META = d.files; LIVEJ = JSON.stringify(d.tree); DATA = JSON.parse(LIVEJ); reindex(); DATA.forEach(r => r.kids.forEach(k => open.add(k.id))); loaded = true;
+        resolveRole(); loadDrafts(); render(); enter(); place(); setRole()
+      }
+      catch (e) {$('tree').innerHTML = '<div class="m" style="padding:30px 6px">Could not load the family data (' + E(e.message) + ').</div>'}
+    })();
+  </script>
+  <script id="direct-save">
+    /* Admin "Save to site": commits straight to main (no pull request). Additive: wraps existing functions, safe to add to a customised page. */
+    (function () {
+      if (window.__directSave) return; window.__directSave = 1;
+      const stripK = ks => ks.map(({tel, addr, bg, ...r}) => ({...r, kids: stripK(r.kids || [])}));
+      const normB = r => JSON.stringify({id: r.id, names: r.names, kids: NOCONTACT ? stripK(r.kids || []) : (r.kids || [])});
+      const savedKey = b => 'saved:' + b;
+      // Repo name: from data/access.json, or guessed from the web address (https://OWNER.github.io/REPO/).
+      const repoName = () => {let r = ''; try {r = REPO();} catch (x) { } if (r) return r; const m = /^([^.]+)\.github\.io$/.exec(location.hostname), seg = location.pathname.split('/')[1]; return m && seg ? m[1] + '/' + seg : '';};
+      // Admin = the signed-in token holder has ADMIN rights on the repository (GitHub decides; no need to edit access.json).
+      window.__repoAdmin = false; let adminChecked = '';
+      async function verifyAdmin() {
+        const key = (GH.user || '') + '|' + (GH.token || '') + '|' + repoName();
+        if (key === adminChecked) return; adminChecked = key;
+        let isAdm = false;
+        if (GH.token) {
+          if (!repoName()) st('Could not work out the repository name — check "repo" in data/access.json.');
+          else {
+            try {
+              const r = await ghApi('/repos/' + repoName());
+              isAdm = !!(r && r.permissions && r.permissions.admin);
+              st(isAdm ? '✅ GitHub confirms you are the admin of ' + repoName() + ' — changes save directly.' : 'ℹ️ This token works, but GitHub says your account is not an admin of ' + repoName() + ' — changes will go as pull requests. (Use a token made by the repository owner.)');
+            } catch (x) {st('⚠️ The token could not read ' + repoName() + ' (error ' + (x.status || 'network') + '). Make a new token: only Family_Tree selected, Contents = Read and write — or a classic token with "public_repo".');}
+          }
+        }
+        if (isAdm !== window.__repoAdmin) {window.__repoAdmin = isAdm; try {resolveRole(); loadDrafts(); render(); setRole();} catch (x) { } }
+      }
+      const _rr = resolveRole; resolveRole = function () {_rr.apply(this, arguments); if (window.__repoAdmin) {role = 'admin'; BR = META.map((x, i) => i);} };
+      // "saved" = committed to GitHub but the published site may not have rebuilt yet; forget it once the site catches up.
+      function cleanSaved() {try {DATA.forEach((r, b) => {const k = S(savedKey(b)); if (k && k === normB(r)) S(savedKey(b), null);});} catch (x) { } }
+      const _ld = loadDrafts; loadDrafts = function () {cleanSaved(); verifyAdmin(); return _ld.apply(this, arguments);};
+      // On github.io there is no login server: always behave as the public, pull-request site (even if data/access.json lacks "mode": "public").
+      const onPages = () => window.__FORCE_PAGES === true || /\.github\.io$/.test(location.hostname);
+      function forcePublic() {
+        if (!onPages()) return;
+        if (!PUBLIC) {PUBLIC = true; NOCONTACT = !(ACCESS && ACCESS.allowContact === true); try {document.body.classList.toggle('nocontact', NOCONTACT);} catch (x) { } }
+        ME = null;['in', 'out'].forEach(i => {const e = $(i); if (e) e.style.display = 'none';});
+      }
+      const _sr = setRole; setRole = function () {forcePublic(); _sr.apply(this, arguments); try {$('sub').textContent = role === 'admin' ? '💾 Save changes' : '📤 Submit changes';} catch (x) { } };
+      const _sub = $('sub').onclick; $('sub').onclick = function () {if (role === 'admin') {adminSaveNow(); return;} return _sub && _sub.apply(this, arguments);};
+      function toast(t) {
+        let e = document.getElementById('ds-toast');
+        if (!e) {e = document.createElement('div'); e.id = 'ds-toast'; e.setAttribute('role', 'status'); e.style.cssText = 'position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:12;max-width:92vw;padding:11px 16px;border-radius:12px;border:1px solid #b8893f;background:#1f1a14;color:#f0d9a0;font:600 14px system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.6);text-align:center'; document.body.appendChild(e);}
+        e.textContent = t; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => {e.style.display = 'none';}, 7000);
+      }
+      // One tap: saves straight to the site (no confirmation step).
+      async function adminSaveNow() {
+        if (!GH.token) {adminSave(); return;}                 // no token yet: explain how to connect one
+        const bs = unsentB(); if (!bs.length) return;
+        const btn = $('sub'); btn.disabled = true; btn.textContent = '⏳ Saving…';
+        try {
+          await saveDirect(bs); bs.forEach(b => {SENT[b] = hash(JSON.stringify(DATA[b]));});
+          toast('✅ Saved — the live site updates in about a minute'); st('Saved to GitHub — live in about a minute');
+        } catch (x) {
+          const msg = String(x.message || 'error');
+          modal('<h3>Could not save</h3><div class="warn">' + E(saveErr(x, msg)) + '</div><button id="rt">Try again</button>', m => {m.querySelector('#rt').onclick = () => {$('modal').style.display = 'none'; adminSaveNow();};});
+        } finally {btn.disabled = false; setRole();}
+      }
+      function saveErr(x, msg) {
+        return x.conflict
+          ? '“' + x.conflict + '” was changed on GitHub since you opened this page (for example a pull request was merged). Reload the page, then repeat your edit so nothing is overwritten.'
+          : 'Could not save (' + msg.slice(0, 140) + ')' + (/protected|rule|bypass/i.test(msg) ? ' — in the repository ruleset, set “Repository admin” to “Always allow” in the bypass list.' : (x.status === 401 || x.status === 403 || x.status === 404 ? ' — check the token is still valid and has Contents: read & write on this repository.' : (x.status === 409 || x.status === 422 ? ' — GitHub says the file changed; reload and retry.' : '')));
+      }
+
+      async function remoteBranch(b) {
+        const f = await ghApi('/repos/' + repoName() + '/contents/data/branches/' + encodeURIComponent(META[b]) + '?ref=main');
+        return {sha: f.sha, obj: JSON.parse(decodeURIComponent(escape(atob(f.content.replace(/\s/g, '')))))};
+      }
+      async function saveDirect(bs) {
+        const repo = repoName(), L = JSON.parse(LIVEJ), ph = newPhotos(bs), cur = {};
+        for (const b of bs) {            // never overwrite something that changed on GitHub since this page loaded
+          const r = await remoteBranch(b); cur[b] = r; const rem = normB(r.obj);
+          if (rem !== normB(L[b]) && rem !== S(savedKey(b))) {const e = new Error('conflict'); e.conflict = DATA[b].names.join(' / '); throw e;}
+        }
+        const put = (path, content, msg, sha) => ghApi('/repos/' + repo + '/contents/' + path, {method: 'PUT', body: JSON.stringify({message: msg, content, branch: 'main', sha})});
+        for (const id of Object.keys(ph)) {
+          let sha; try {sha = (await ghApi('/repos/' + repo + '/contents/data/photos/' + id + '.jpg?ref=main')).sha;} catch (x) {if (x.status !== 404) throw x;}
+          await put('data/photos/' + id + '.jpg', ph[id].split(',')[1], 'Add photo ' + id, sha);
+        }
+        for (const b of bs) {await put('data/branches/' + META[b], b64(branchJson(b)), 'Admin edit: ' + DATA[b].names.join(' / '), cur[b].sha); S(savedKey(b), normB(DATA[b]));}
+      }
+      function adminSave() {
+        const L = JSON.parse(LIVEJ), bs = unsentB(), ph = newPhotos(bs);
+        modal('<h3>Save changes</h3><div class="m">Saved straight to GitHub — no pull request. The live site updates in about a minute.</div>'
+          + bs.map(b => '<div class="m"><b>' + E(DATA[b].names.join(' / ')) + '</b></div>' + dlist(diff(L[b], DATA[b]))).join('')
+          + (GH.token ? '<button id="go">💾 Save now</button>' : '<div class="warn">To save directly, connect GitHub with a token that has <b>Contents: read &amp; write</b> (tap 🔗 at the top). Or save by hand:</div>' + manualHtml(bs, ph))
+          + '<div id="gm" class="warn"></div>', m => {
+            m.querySelectorAll('.cp').forEach(b => b.onclick = async () => {try {await navigator.clipboard.writeText(branchJson(+b.dataset.b)); b.textContent = 'Copied ✔';} catch (x) {b.textContent = 'Copy failed';} });
+            const go = m.querySelector('#go');
+            if (go) go.onclick = async () => {
+              go.disabled = true; go.textContent = 'Saving…';
+              try {
+                await saveDirect(bs); bs.forEach(b => {SENT[b] = hash(JSON.stringify(DATA[b]));}); setRole();
+                m.innerHTML = '<h3>✅ Saved</h3><div class="m">Your changes are in GitHub. The live site updates in about a minute — reload then.</div>'; st('Saved to GitHub — live in about a minute');
+              } catch (x) {
+                go.disabled = false; go.textContent = '💾 Save now';
+                m.querySelector('#gm').textContent = saveErr(x, String(x.message || 'error'));
+              }
+            };
+          });
+      }
+      // Visible version tag, so you can tell whether the new page is the one being served.
+      try {const v = document.createElement('span'); v.className = 'st'; v.id = 'ds-ver'; v.style.opacity = '.45'; v.style.marginLeft = '8px'; v.textContent = 'build admin-save-5'; ($('st') && $('st').parentNode ? $('st').parentNode : document.body).appendChild(v);} catch (x) { }
+    })();
+
+  </script>
+</body>
+
+</html>
