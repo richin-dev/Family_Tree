@@ -112,7 +112,10 @@
                 "TEMINA GEO"
               ],
               "c": "pink",
-              "kids": []
+              "kids": [],
+              "bg": [
+                "A+"
+              ]
             },
             {
               "id": "n228",
