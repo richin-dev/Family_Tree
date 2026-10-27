@@ -128,7 +128,10 @@
                     "ERIC TOM RICHIN"
                   ],
                   "c": "purple",
-                  "kids": []
+                  "kids": [],
+                  "bg": [
+                    "AB+"
+                  ]
                 }
               ],
               "ph": [
