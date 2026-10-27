@@ -58,8 +58,7 @@
         {
           "id": "n221",
           "names": [
-            "BEENA BOBAN",
-            "BOBAN KIDANGAN"
+            "BEENA BOBAN"
           ],
           "c": "pink",
           "kids": []
@@ -114,7 +113,7 @@
               "c": "pink",
               "kids": [],
               "ph": [
-                "pmvqgty021jh"
+                null
               ]
             },
             {
@@ -136,13 +135,13 @@
                     ""
                   ],
                   "ph": [
-                    "pmvqgrtq1o8x"
+                    null
                   ]
                 }
               ],
               "ph": [
-                "pmvqgr7lagbf",
-                "pmvqgrhxlgpa"
+                null,
+                null
               ],
               "bg": [
                 "A+",
