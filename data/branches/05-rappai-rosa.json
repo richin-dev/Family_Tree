@@ -58,7 +58,8 @@
         {
           "id": "n221",
           "names": [
-            "BEENA BOBAN"
+            "BEENA BOBAN",
+            "BOBAN K"
           ],
           "c": "pink",
           "kids": []
@@ -111,10 +112,7 @@
                 "TEMINA GEO"
               ],
               "c": "pink",
-              "kids": [],
-              "ph": [
-                null
-              ]
+              "kids": []
             },
             {
               "id": "n228",
@@ -130,13 +128,7 @@
                     "ERIC TOM RICHIN"
                   ],
                   "c": "purple",
-                  "kids": [],
-                  "bg": [
-                    ""
-                  ],
-                  "ph": [
-                    null
-                  ]
+                  "kids": []
                 }
               ],
               "ph": [
@@ -144,18 +136,12 @@
                 null
               ],
               "bg": [
-                "A+",
-                "AB+"
-              ],
-              "tel": "7293977809"
+                "A+"
+              ]
             }
           ],
           "dd": [
             ""
-          ],
-          "bg": [
-            "AB+",
-            "O+"
           ]
         },
         {
