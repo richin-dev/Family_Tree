@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head><base href="/Family_Tree/">
+<head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Family Tree</title>
@@ -2027,7 +2027,7 @@
     $('in').onclick = () => {
       // Clear any stale prototype session so the login page can be opened again.
       sessionStorage.removeItem('ft_local_user');
-      sessionStorage.removeItem('ft_local_token'); sessionStorage.removeItem('ft_local_key');
+      sessionStorage.removeItem('ft_local_token');
       ME = null;
       GH = {user: '', token: ''};
       location.href = 'login.html';
@@ -2035,7 +2035,7 @@
 
     $('out').onclick = () => {
       sessionStorage.removeItem('ft_local_user');
-      sessionStorage.removeItem('ft_local_token'); sessionStorage.removeItem('ft_local_key');
+      sessionStorage.removeItem('ft_local_token');
       ME = null;
       GH = {user: '', token: ''};
       location.replace('./');
@@ -2049,7 +2049,6 @@
         let a = await loadAccess(); PUBLIC = !!(a && a.mode === 'public'); NOCONTACT = PUBLIC && a.allowContact !== true; document.body.classList.toggle('nocontact', NOCONTACT);
         if (!PUBLIC) {await whoami(); if (ME && !a) a = await loadAccess()}
         const d = await fetch('data.json', {cache: 'no-store', credentials: 'same-origin'}).then(r => {if (!r.ok) throw new Error('data ' + r.status); return r.json()});
-        if (!PUBLIC && ME && !(await ftUnlockContacts(d))) {ftClearLocalSession(); ME = null; GH = {user: '', token: ''}; setRole()}   // stale or invalid sign-in: continue as a guest
         ACCESS = a; META = d.files; LIVEJ = JSON.stringify(d.tree); DATA = JSON.parse(LIVEJ); reindex(); DATA.forEach(r => r.kids.forEach(k => open.add(k.id))); loaded = true;
         resolveRole(); loadDrafts(); render(); enter(); place(); setRole()
       }
