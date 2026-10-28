@@ -1,7 +1,0 @@
-node_modules
-dist
-summary.md
-.DS_Store
-.auth
-.dev.vars
-*.mov
