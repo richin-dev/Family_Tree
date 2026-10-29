@@ -35,12 +35,12 @@ button.go:disabled{opacity:.55;cursor:wait}
   </form>
   <button class="forgot" type="button" id="forgot" aria-expanded="false" aria-controls="reset-note">Forgot password?</button>
   <div class="reset-note" id="reset-note" hidden>This sign-in does not send password-reset emails. Please contact the family administrator to request a new password.</div>
-  <a class="back" href="./">← Back to the family tree</a>
+  <a class="back" href="tree.html">← Back to the family tree</a>
   <div class="note">Accounts are created by the family admin — there is no sign-up. Ask them if you need access.</div>
 </main>
 <script>
 const $=id=>document.getElementById(id);
-const goNext=()=>{const n=new URLSearchParams(location.search).get('next');location.replace(n&&!n.startsWith('//')&&!n.includes(':')?n:'./')};
+const goNext=()=>{const n=new URLSearchParams(location.search).get('next');location.replace(n&&!n.startsWith('//')&&!n.includes(':')?n:'tree.html')};
 $('eye').onclick=()=>{const s=$('p').type==='password';$('p').type=s?'text':'password';$('eye').textContent=s?'Hide':'Show'};
 $('forgot').onclick=()=>{const panel=$('reset-note'),open=panel.hidden;panel.hidden=!open;$('forgot').setAttribute('aria-expanded',String(open))};
 $('f').onsubmit=async e=>{e.preventDefault();$('go').disabled=true;$('msg').textContent='';

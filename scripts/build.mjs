@@ -34,7 +34,10 @@ function copyHtml(src, fallback, dest) {
   }
   fs.writeFileSync(dest, html);
 }
-copyHtml('site/index.html', 'index.html', 'dist/index.html');
+// The public entry is the animated cover. Keep the existing tree available on
+// its own page so visitors enter it only after choosing Explore.
+copyHtml('site/cover.html', 'cover.html', 'dist/index.html');
+copyHtml('site/index.html', 'index.html', 'dist/tree.html');
 copyHtml('site/login.html', 'login.html', 'dist/login.html');
 fs.copyFileSync('site/pages-auth.js', 'dist/pages-auth.js');
 fs.copyFileSync('privacy.html', 'dist/privacy.html');

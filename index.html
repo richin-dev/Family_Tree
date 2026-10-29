@@ -1899,7 +1899,7 @@
     });
     $('tree').addEventListener('mouseout', e => {const c = e.target.closest('.c'); if (c && !c.contains(e.relatedTarget)) {hov = null; pop.style.display = 'none'} });
     function hide() {$('side').style.display = 'none'}
-    $('ed').onclick = () => {if (!ME && !PUBLIC) {location.href = 'login.html?next=./'; return } if (role === 'viewer') {ghDialog(); return } ed = !ed; $('ed').classList.toggle('on', ed); document.querySelectorAll('.edo').forEach(e => e.style.display = ed ? '' : 'none'); render(); st(ed ? 'Your changes become a pull request that the admin reviews' : ''); if (sel && $('side').style.display === 'block') show(sel)};
+    $('ed').onclick = () => {if (!ME && !PUBLIC) {location.href = 'login.html?next=tree.html'; return } if (role === 'viewer') {ghDialog(); return } ed = !ed; $('ed').classList.toggle('on', ed); document.querySelectorAll('.edo').forEach(e => e.style.display = ed ? '' : 'none'); render(); st(ed ? 'Your changes become a pull request that the admin reviews' : ''); if (sel && $('side').style.display === 'block') show(sel)};
     $('ab').onclick = () => {if (!mine(cur)) {st('You can add only to your assigned branches'); return } const k = mk(['NEW PERSON'], 'blue'); DATA[cur].kids.push(k); reindex(); save(); render(); show(k); const i = document.querySelector('.nm'); i && i.select()};
     reindex(); DATA.forEach(r => r.kids.forEach(k => open.add(k.id)));
     (function () {
@@ -2060,7 +2060,7 @@
       sessionStorage.removeItem('ft_local_token');
       ME = null;
       GH = {user: '', token: ''};
-      location.href = 'login.html';
+      location.href = 'login.html?next=tree.html';
     };
 
     $('out').onclick = async () => {
