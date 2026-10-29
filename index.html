@@ -561,6 +561,30 @@
       opacity: .4
     }
 
+    .order-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin: 0 5px;
+      position: relative;
+      z-index: 4
+    }
+
+    .order-controls button {
+      min-width: 25px;
+      padding: 2px 5px;
+      border: 1px solid #b8893f;
+      border-radius: 5px;
+      color: #f0d9a0;
+      background: #21190f;
+      cursor: pointer
+    }
+
+    .order-controls button:disabled {
+      opacity: .35;
+      cursor: default
+    }
+
     #loose {
       display: none;
       position: relative;
@@ -1880,6 +1904,7 @@
     function reindex() {P = new Map(); DATA.forEach(r => (function f(n, p) {P.set(n.id, {n, p}); n.kids.forEach(k => f(k, n))})(r, null))}
     const cnt = n => n.kids.reduce((a, k) => a + 1 + cnt(k), 0);
     function path(id) {const a = []; let e = P.get(id); while (e && e.p) {e = P.get(e.p.id); if (e && e.n.names.length && e.p) a.unshift(e.n.names[0])} return a}
+    function reorderSibling(n,delta) {const entry=P.get(n.id);if(!entry||!entry.p||!canEditNode(n))return;const siblings=entry.p.kids,from=siblings.indexOf(n),to=from+delta;if(from<0||to<0||to>=siblings.length)return;[siblings[from],siblings[to]]=[siblings[to],siblings[from]];save();render();show(n);st('Sibling order updated')}
     let IDX = 0; function node(n, vis = true) {
       const k = document.createElement('div'); k.className = 'k ' + n.c; if (vis) k.style.setProperty('--i', IDX++); const row = document.createElement('div'); row.className = 'n';
       const c = document.createElement('div'); c.className = 'c ' + n.c + (hits.has(n.id) ? ' hit' : '') + (sel && sel.id === n.id ? ' sel' : ''); c.dataset.id = n.id;
@@ -1894,6 +1919,12 @@
         c.ondrop = ev => {ev.preventDefault(); ev.stopPropagation(); c.classList.remove('drop-target'); const token=ev.dataTransfer.getData('text/plain'); if(token.startsWith('node:')) moveNode(token.slice(5),n); else if(token.startsWith('loose:')) attachLoose(token.slice(6),n)};
       }
       c.onclick = () => show(n); row.appendChild(c);
+      if(ed&&canEditNode(n)){
+        const siblings=P.get(n.id).p.kids,index=siblings.indexOf(n),controls=document.createElement('span');controls.className='order-controls';
+        const up=document.createElement('button');up.type='button';up.textContent='↑';up.title='Move '+(n.names[0]||'person')+' up';up.setAttribute('aria-label',up.title);up.disabled=index<=0;up.onclick=ev=>{ev.stopPropagation();reorderSibling(n,-1)};
+        const down=document.createElement('button');down.type='button';down.textContent='↓';down.title='Move '+(n.names[0]||'person')+' down';down.setAttribute('aria-label',down.title);down.disabled=index===siblings.length-1;down.onclick=ev=>{ev.stopPropagation();reorderSibling(n,1)};
+        controls.append(up,down);row.appendChild(controls)
+      }
       if (n.kids.length) {
         const o = open.has(n.id), t = document.createElement('button'); t.className = 'tg'; t.textContent = o ? '−' : '+'; row.appendChild(t);
         const ks = document.createElement('div'); ks.className = 'kids'; ks.style.setProperty('--pc', ({blue: '#35b6ff', pink: '#ff4fa8', green: '#4ed05a', orange: '#ff8a2a', purple: '#b05cff', teal: '#22d6ff', yellow: '#ffc928'})[n.c]); if (!o) ks.style.display = 'none'; n.kids.forEach(x => ks.appendChild(node(x, vis && o))); row.appendChild(ks);
@@ -2051,7 +2082,14 @@
     function contact(n) {return (n.tel ? '<div class="m">📞 <a href="tel:' + E(String(n.tel).replace(/[^\d+]/g, '')) + '">' + E(n.tel) + '</a></div>' : '') + (n.addr ? '<div class="m">📍 ' + E(n.addr) + ' · <a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(n.addr) + '">Map</a></div>' : '')}
     function flat(root) {const m = new Map(); (function f(n, pn) {n.kids.forEach(k => {m.set(k.id, {n: k, p: pn}); f(k, k)})})(root, root); return m}
     const lab = n => n.names.join(' & ');
-    function diff(a, b) {const A = flat(a), B = flat(b), o = []; B.forEach(({n, p}, id) => {const x = A.get(id); if (!x) o.push('➕ ' + lab(n) + '  (under ' + lab(p) + ')'); else {const y = x.n; if (lab(y) !== lab(n)) o.push('✏️ ' + lab(y) + ' → ' + lab(n)); const c = [];[['c', 'colour'], ['tel', 'phone'], ['addr', 'address'], ['link', 'link']].forEach(([k, l]) => {if ((y[k] || '') !== (n[k] || '')) c.push(l)});[['bg', 'blood group'], ['dd', 'passed away'], ['ph', 'photo']].forEach(([k, l]) => {if (JSON.stringify(y[k] || []) !== JSON.stringify(n[k] || [])) c.push(l)}); if (c.length) o.push('✏️ ' + lab(n) + ': ' + c.join(', ') + ' changed')} }); A.forEach(({n}, id) => {if (!B.has(id)) o.push('➖ ' + lab(n) + ' removed')}); return o}
+    function orderMap(root) {const m=new Map();(function walk(n){m.set(n.id,{ids:n.kids.map(k=>k.id),name:lab(n)});n.kids.forEach(walk)})(root);return m}
+    function diff(a, b) {
+      const A=flat(a),B=flat(b),OA=orderMap(a),OB=orderMap(b),o=[];
+      B.forEach(({n,p},id)=>{const x=A.get(id);if(!x)o.push('➕ '+lab(n)+'  (under '+lab(p)+')');else{const y=x.n;if(lab(y)!==lab(n))o.push('✏️ '+lab(y)+' → '+lab(n));const c=[];[['c','colour'],['tel','phone'],['addr','address'],['link','link']].forEach(([k,l])=>{if((y[k]||'')!==(n[k]||''))c.push(l)});[['bg','blood group'],['dd','passed away'],['ph','photo']].forEach(([k,l])=>{if(JSON.stringify(y[k]||[])!==JSON.stringify(n[k]||[]))c.push(l)});if(c.length)o.push('✏️ '+lab(n)+': '+c.join(', ')+' changed')}});
+      A.forEach(({n},id)=>{if(!B.has(id))o.push('➖ '+lab(n)+' removed')});
+      OB.forEach((after,id)=>{const before=OA.get(id);if(before&&before.ids.length===after.ids.length&&before.ids.every(child=>after.ids.includes(child))&&before.ids.some((child,i)=>child!==after.ids[i]))o.push('↕ Reordered children under '+before.name)});
+      return o
+    }
     const dlist = d => '<div class="dl">' + (d && d.length ? d.slice(0, 40).map(x => '<div>' + E(x) + '</div>').join('') + (d.length > 40 ? '<div>…and ' + (d.length - 40) + ' more</div>' : '') : '<div>No changes found</div>') + '</div>';
     function modal(h, fn) {$('mc').dataset.k = ''; $('mc').innerHTML = h; $('modal').style.display = 'flex'; fn && fn($('mc'))}
     $('mx').onclick = () => $('modal').style.display = 'none';
