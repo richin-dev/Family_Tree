@@ -552,6 +552,67 @@
       box-shadow: var(--ring), 0 0 0 6px rgba(255, 255, 255, .9), 0 0 20px 6px var(--glow)
     }
 
+    .c.drop-target {
+      outline: 3px dashed #f0d9a0;
+      outline-offset: 5px
+    }
+
+    .c.dragging {
+      opacity: .4
+    }
+
+    #loose {
+      display: none;
+      position: relative;
+      z-index: 2;
+      margin: 8px 14px;
+      padding: 10px 12px;
+      border: 1px dashed #b8893f;
+      border-radius: 10px;
+      background: rgba(23,18,12,.85)
+    }
+
+    #loose .loose-head {
+      margin-bottom: 6px;
+      color: #f0d9a0;
+      font-weight: 700
+    }
+
+    #loose .loose-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px
+    }
+
+    #loose .loose-slot {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px;
+      border: 1px solid #66502f;
+      border-radius: 8px;
+      background: #11100d
+    }
+
+    #loose input {
+      width: 150px;
+      min-width: 90px;
+      padding: 5px 7px;
+      border: 1px solid #66502f;
+      border-radius: 6px;
+      color: var(--ink);
+      background: #090a0a
+    }
+
+    #loose button {
+      padding: 5px 7px;
+      border: 1px solid #b8893f;
+      border-radius: 6px;
+      color: #f0d9a0;
+      background: #21190f;
+      cursor: pointer
+    }
+
     .c.hit {
       box-shadow: var(--ring), 0 0 0 6px #e53935, 0 0 18px 6px #ff7b73
     }
@@ -1744,12 +1805,13 @@
   </div>
   <div class="bar"><input id="q" type="search" placeholder="Search a name…"><button id="ea">Expand all</button><button
       id="ca">Collapse</button><button id="sz" title="Card size">Aa Size</button><button id="ed">✏️ Edit</button><button
-      id="ab" class="edo" style="display:none">+ Add to branch</button><button id="sub" style="display:none">📤 Submit
-      changes</button><button id="dis" style="display:none">↩ Discard my changes</button><button id="gh">🔗 Connect
+      id="ab" class="edo" style="display:none">+ Add to branch</button><button id="loose-add" class="edo" style="display:none">＋ Floating slot</button><button id="sub" style="display:none">📤 Submit
+      changes</button><button id="undo" style="display:none" disabled>↶ Undo</button><button id="dis" style="display:none">↩ Discard my changes</button><button id="gh">🔗 Connect
       GitHub</button><button id="prs" style="display:none">📬 Requests</button><button id="in" style="display:none">🔑
       Sign in</button><button id="out" style="display:none">Sign out</button><span class="st" id="who"></span><span
       class="st" id="st"></span></div>
   <div class="leg" id="leg"></div>
+  <div id="loose"></div>
   <div class="wrap" id="wrap">
     <div id="banners"></div><i id="dv"></i><i id="dh"></i>
     <div id="tree"></div>
@@ -1764,7 +1826,8 @@
     const S = (k, v) => {try {if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v)} catch (e) {return null} };
     const E = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
     const PH = {}, NEWPH = {}, UPLOADED = new Set();
-    let role = 'viewer', BR = [], dirtyB = [], SENT = {}, ACCESS = null, META = [], GH = {user: S('gh:user') || '', token: S('gh:token') || ''}, LIVEJ = '[]', loaded = false;
+    let role = 'viewer', BR = [], dirtyB = [], SENT = {}, ACCESS = null, META = [], GH = {user: S('gh:user') || '', token: S('gh:token') || ''}, LIVEJ = '[]', loaded = false, undoStack = [], undoState = '', LOOSE = [];
+    const historyState = () => JSON.stringify({tree: DATA, loose: LOOSE, current: cur});
     let cur = 0, sel = null, ed = false, P = new Map(), open = new Set(), hits = new Set(), lastJ = '', tm = null;
     $('leg').innerHTML = Object.values(GEN).map(g => '<span><b style="background:' + g[2] + '"></b>' + g[0] + ' = ' + g[1] + '</span>').join('') + '<span>✝ Grey name = passed away</span><span><b style="background:#000;color:#777"></b>Black slot = couple both passed away</span>';
     const dead = (n, i) => typeof (n.dd || [])[i] === 'string';
@@ -1822,6 +1885,14 @@
       const c = document.createElement('div'); c.className = 'c ' + n.c + (hits.has(n.id) ? ' hit' : '') + (sel && sel.id === n.id ? ' sel' : ''); c.dataset.id = n.id;
       c.innerHTML = '<span class="av">' + E((n.names[0] || '?').trim().charAt(0)) + '</span><div class="t">' + n.names.map((x, i) => {const b = (n.bg || [])[i], d = dead(n, i); return '<div class="ln' + (d ? ' dead' : '') + '"><span>' + E(x) + (d ? '<em class="dd"> ✝' + (n.dd[i] ? ' ' + E(n.dd[i]) : '') + '</em>' : '') + '</span>' + (b ? '<b class="bd">🩸 ' + E(b) + '</b>' : (ed ? '<b class="bd e">🩸</b>' : '')) + '</div>'}).join('') + '</div>' + icons(n);
       if (n.names.length > 1 && n.names.every((x, i) => dead(n, i))) c.classList.add('dead2');
+      if (ed && canEditNode(n)) {
+        c.draggable = true; c.title = 'Drag this person and their descendants to a new parent';
+        c.ondragstart = ev => {ev.dataTransfer.setData('text/plain', 'node:' + n.id); ev.dataTransfer.effectAllowed = 'move'; c.classList.add('dragging')};
+        c.ondragend = () => c.classList.remove('dragging');
+        c.ondragover = ev => {ev.preventDefault(); ev.dataTransfer.dropEffect = 'move'; c.classList.add('drop-target')};
+        c.ondragleave = ev => {if (!c.contains(ev.relatedTarget)) c.classList.remove('drop-target')};
+        c.ondrop = ev => {ev.preventDefault(); ev.stopPropagation(); c.classList.remove('drop-target'); const token=ev.dataTransfer.getData('text/plain'); if(token.startsWith('node:')) moveNode(token.slice(5),n); else if(token.startsWith('loose:')) attachLoose(token.slice(6),n)};
+      }
       c.onclick = () => show(n); row.appendChild(c);
       if (n.kids.length) {
         const o = open.has(n.id), t = document.createElement('button'); t.className = 'tg'; t.textContent = o ? '−' : '+'; row.appendChild(t);
@@ -1830,9 +1901,41 @@
       }
       k.appendChild(row); return k
     }
+    function renderLoose() {
+      const host=$('loose'); if(!host)return;
+      if(!ed){host.style.display='none';host.innerHTML='';return}
+      const items=LOOSE.filter(x=>mine(x.branch));
+      if(!items.length){host.style.display='none';host.innerHTML='';return}
+      host.style.display='block';
+      host.innerHTML='<div class="loose-head">Floating slots <span style="font-weight:400;opacity:.8">— drag onto a parent to attach; attach or remove all before saving</span></div><div class="loose-list">'+items.map(x=>'<div class="loose-slot"><input data-loose-name="'+E(x.node.id)+'" value="'+E(x.node.names[0]||'NEW PERSON')+'" aria-label="Floating person name"><button class="loose-drag" draggable="true" data-loose-id="'+E(x.node.id)+'">↕ Drag to parent</button><button class="loose-remove" data-loose-id="'+E(x.node.id)+'" aria-label="Remove floating slot">×</button></div>').join('')+'</div>';
+      host.querySelectorAll('[data-loose-name]').forEach(input=>input.onchange=()=>{const item=LOOSE.find(x=>x.node.id===input.dataset.looseName);if(item){item.node.names[0]=input.value.trim()||'NEW PERSON';save();renderLoose()}});
+      host.querySelectorAll('.loose-drag').forEach(button=>{button.ondragstart=ev=>{ev.dataTransfer.setData('text/plain','loose:'+button.dataset.looseId);ev.dataTransfer.effectAllowed='move'}});
+      host.querySelectorAll('.loose-remove').forEach(button=>button.onclick=()=>{LOOSE=LOOSE.filter(x=>x.node.id!==button.dataset.looseId);save();renderLoose()});
+    }
+    function generationIndex(n) {let depth=0,entry=P.get(n.id);while(entry){depth++;entry=entry.p&&P.get(entry.p.id)}return Math.max(0,Math.min(RK.length-1,depth-1))}
+    function visibleDepth(n) {let depth=0,entry=P.get(n.id);while(entry){depth++;entry=entry.p&&P.get(entry.p.id)}return depth}
+    function subtreeHeight(n) {return 1+Math.max(0,...n.kids.map(subtreeHeight))}
+    function recolorSubtree(n,index) {if(RK.includes(n.c))n.c=RK[Math.min(index,RK.length-1)];n.kids.forEach(k=>recolorSubtree(k,index+1))}
+    function containsId(n,id) {if(n.id===id)return true;return n.kids.some(k=>containsId(k,id))}
+    function moveNode(id,target) {
+      const entry=P.get(id), targetBranch=rootIdx(target); if(!entry||!entry.p)return;
+      const sourceBranch=rootIdx(entry.n);
+      if(!mine(sourceBranch)||!mine(targetBranch)){st('You can move people only between branches assigned to you');return}
+      if(containsId(entry.n,target.id)){st('A person cannot be moved under themselves or their descendant');return}
+      if(entry.p.id===target.id){st('This person is already under that parent');return}
+      if(visibleDepth(target)+subtreeHeight(entry.n)>9){st('That move would make the family line too deep');return}
+      const at=entry.p.kids.indexOf(entry.n);if(at<0)return;entry.p.kids.splice(at,1);target.kids.push(entry.n);
+      recolorSubtree(entry.n,generationIndex(target)+1);cur=targetBranch;open.add(target.id);ch(entry.n);st('Moved the person and their descendants; generation colours were updated')
+    }
+    function attachLoose(id,target) {
+      const index=LOOSE.findIndex(x=>x.node.id===id);if(index<0)return;const item=LOOSE[index],targetBranch=rootIdx(target);
+      if(!mine(item.branch)||!mine(targetBranch)){st('You can attach slots only in branches assigned to you');return}
+      if(visibleDepth(target)+subtreeHeight(item.node)>9){st('That slot would make the family line too deep');return}
+      target.kids.push(item.node);LOOSE.splice(index,1);recolorSubtree(item.node,generationIndex(target)+1);cur=targetBranch;open.add(target.id);ch(item.node);renderLoose();st('Attached the new slot; its generation colour was set automatically')
+    }
     let ET = null, STEP = 40;
     function render() {
-      $('pop').style.display = 'none'; const w = $('wrap'), sx = w.scrollLeft, sy = window.scrollY; banners(); const t = $('tree'); t.innerHTML = ''; IDX = 0; if (!DATA.length) {t.innerHTML = '<div class="m" style="padding:30px 6px">Loading the family tree…</div>'; return } const r = DATA[cur];
+      $('pop').style.display = 'none'; const w = $('wrap'), sx = w.scrollLeft, sy = window.scrollY; banners(); renderLoose(); const t = $('tree'); t.innerHTML = ''; IDX = 0; if (!DATA.length) {t.innerHTML = '<div class="m" style="padding:30px 6px">Loading the family tree…</div>'; return } const r = DATA[cur];
       const h = document.createElement('div'); h.className = 'kids top'; h.style.margin = '0'; r.kids.forEach(x => h.appendChild(node(x, true))); t.appendChild(h);
       STEP = Math.max(14, Math.min(60, 2400 / Math.max(IDX, 1))); t.style.setProperty('--st', STEP + 'ms'); w.scrollLeft = sx; window.scrollTo(window.scrollX, sy); place()
     }
@@ -1888,7 +1991,7 @@
       s.querySelectorAll('.rp').forEach(b => b.onclick = () => {n.ph[+b.dataset.i] = null; ch(n)});
       s.querySelectorAll('img.th').forEach(im => getPh(im.dataset.pid).then(u => {if (u) im.src = u}));
       $('an').onclick = () => {n.names.push('NEW NAME'); ch(n)}; $('cat').onchange = ev => {n.c = ev.target.value; ch(n)}; $('lk').onchange = ev => {n.link = ev.target.value.trim(); ch(n)}; $('tel').onchange = ev => {n.tel = ev.target.value.trim(); ch(n)}; $('addr').onchange = ev => {n.addr = ev.target.value.trim(); ch(n)};
-      $('ac').onclick = () => {const r = RK.indexOf(n.c), k = mk(['NEW PERSON'], r >= 0 ? RK[Math.min(r + 1, 4)] : 'pink'); n.kids.push(k); open.add(n.id); reindex(); save(); render(); show(k); const i = document.querySelector('.nm'); i && i.select()};
+      $('ac').onclick = () => {const k = mk(['NEW PERSON'], RK[Math.min(generationIndex(n) + 1, RK.length - 1)]); n.kids.push(k); open.add(n.id); reindex(); save(); render(); show(k); const i = document.querySelector('.nm'); i && i.select()};
       $('dl').onclick = function () {if (this.dataset.s !== '1') {this.dataset.s = '1'; this.textContent = 'Tap again to confirm'; return } const pe = P.get(n.id); pe.p.kids.splice(pe.p.kids.indexOf(n), 1); sel = null; reindex(); save(); render(); hide()}
     }
     let hov = null; const pop = $('pop');
@@ -1899,8 +2002,9 @@
     });
     $('tree').addEventListener('mouseout', e => {const c = e.target.closest('.c'); if (c && !c.contains(e.relatedTarget)) {hov = null; pop.style.display = 'none'} });
     function hide() {$('side').style.display = 'none'}
-    $('ed').onclick = () => {if (!ME && !PUBLIC) {location.href = 'login.html?next=tree.html'; return } if (role === 'viewer') {ghDialog(); return } ed = !ed; $('ed').classList.toggle('on', ed); document.querySelectorAll('.edo').forEach(e => e.style.display = ed ? '' : 'none'); render(); st(ed ? 'Your changes become a pull request that the admin reviews' : ''); if (sel && $('side').style.display === 'block') show(sel)};
+    $('ed').onclick = () => {if (!ME && !PUBLIC) {location.href = 'login.html?next=tree.html'; return } if (role === 'viewer') {ghDialog(); return } ed = !ed; $('ed').classList.toggle('on', ed); document.querySelectorAll('.edo').forEach(e => e.style.display = ed ? '' : 'none'); render(); setRole(); st(ed ? 'Your changes become a pull request that the admin reviews' : ''); if (sel && $('side').style.display === 'block') show(sel)};
     $('ab').onclick = () => {if (!mine(cur)) {st('You can add only to your assigned branches'); return } const k = mk(['NEW PERSON'], 'blue'); DATA[cur].kids.push(k); reindex(); save(); render(); show(k); const i = document.querySelector('.nm'); i && i.select()};
+    $('loose-add').onclick = () => {if(!mine(cur)){st('You can add slots only in branches assigned to you');return}LOOSE.push({branch:cur,node:mk(['NEW PERSON'],'blue')});save();renderLoose();setRole();st('Name the floating slot, then drag it onto the parent it belongs under')};
     reindex(); DATA.forEach(r => r.kids.forEach(k => open.add(k.id)));
     (function () {
       const cv = $('fx'), cx = cv.getContext('2d'); let W, H, mx = .5, my = .4, fl = 1, ft = 0, T = 0;
@@ -1963,9 +2067,18 @@
     function refreshDirty() {
       let L = []; try {L = JSON.parse(LIVEJ)} catch (x) { }
       dirtyB = BR.filter(b => L[b] && DATA[b] && JSON.stringify(DATA[b]) !== JSON.stringify(L[b]));
-      const dr = {}; dirtyB.forEach(b => dr[b] = DATA[b]); if (GH.user) S('draft:' + GH.user.toLowerCase(), dirtyB.length ? JSON.stringify(dr) : null); setRole()
+      const dr = {}; dirtyB.forEach(b => dr[b] = DATA[b]); if (GH.user) {S('draft:' + GH.user.toLowerCase(), dirtyB.length ? JSON.stringify(dr) : null); S('loose:' + GH.user.toLowerCase(), LOOSE.length ? JSON.stringify(LOOSE) : null)} setRole()
     }
-    function loadDrafts() {dirtyB = []; if (!GH.user || !BR.length) return; try {const dr = JSON.parse(S('draft:' + GH.user.toLowerCase()) || '{}'); Object.keys(dr).forEach(b => {if (BR.includes(+b) && DATA[+b]) DATA[+b] = dr[b]}); reindex(); refreshDirty()} catch (x) { } }
+    function loadDrafts() {
+      dirtyB=[]; LOOSE=[]; undoStack=[];
+      if(GH.user&&BR.length){
+        const key=GH.user.toLowerCase();
+        try{const dr=JSON.parse(S('draft:'+key)||'{}');Object.keys(dr).forEach(b=>{if(BR.includes(+b)&&DATA[+b])DATA[+b]=dr[b]})}catch(x){}
+        try{const loose=JSON.parse(S('loose:'+key)||'[]');LOOSE=Array.isArray(loose)?loose.filter(x=>x&&Number.isInteger(x.branch)&&BR.includes(x.branch)&&x.node&&x.node.id&&Array.isArray(x.node.kids)):[]}catch(x){}
+        reindex();refreshDirty()
+      }
+      undoState=historyState()
+    }
     function setRole() {
       const ok = role === 'admin' || role === 'editor';
       $('who').textContent = (ME ? ME.name + ' · ' : '') + (role === 'admin' ? '👑 Admin · @' + GH.user : role === 'editor' ? '✏️ @' + GH.user : GH.user ? '👁 @' + GH.user + ' (no branches assigned)' : (ME || PUBLIC ? '👁 View only' : '👁 Public view'));
@@ -1976,9 +2089,9 @@
       $('in').style.display = ME ? 'none' : 'inline-block';   // CHANGED: Sign in only when logged out
       $('out').style.display = ME ? 'inline-block' : 'none'; // CHANGED: Sign out only when logged in
 
-      $('sub').style.display = ok && unsentB().length ? '' : 'none'; $('dis').style.display = ok && dirtyB.length ? '' : 'none'; $('prs').style.display = REPO() ? '' : 'none'
+      $('loose-add').style.display = ok && ed ? '' : 'none'; $('sub').style.display = ok && !LOOSE.length && unsentB().length ? '' : 'none'; $('undo').style.display = ok && ed && undoStack.length ? '' : 'none'; $('undo').disabled = !undoStack.length; $('dis').style.display = ok && (dirtyB.length || LOOSE.length) ? '' : 'none'; $('prs').style.display = REPO() ? '' : 'none'
     }
-    function save() {refreshDirty(); st('Draft kept on this device — tap “Submit changes” to send it as a pull request')}
+    function save() {const now=historyState();if(undoState&&now!==undoState){undoStack.push(undoState);if(undoStack.length>50)undoStack.shift()}undoState=now;refreshDirty();st(LOOSE.length?'Attach or remove floating slots before saving changes.':'Draft kept on this device — tap “Submit changes” to send it as a pull request')}
     function apply() { }
 
     /* ---- GitHub connection ---- */
@@ -2031,7 +2144,8 @@
         const go = m.querySelector('#go'); if (go) go.onclick = async () => {go.disabled = true; go.textContent = 'Creating…'; try {const pr = await createPR(bs, m.querySelector('#nt').value.slice(0, 500)); bs.forEach(b => {SENT[b] = hash(JSON.stringify(DATA[b]))}); setRole(); m.innerHTML = '<h3>✅ Pull request created</h3><div class="m">The admin will review it. You will get a GitHub email when it is merged or closed.</div><a class="btn" target="_blank" rel="noopener" href="' + E(pr.html_url) + '">Open the pull request</a>'} catch (x) {go.disabled = false; go.textContent = 'Create pull request'; m.querySelector('#gm').textContent = 'Could not create it (' + (x.message || 'error').slice(0, 120) + '). You can use the manual steps below.'} }
       })
     };
-    $('dis').onclick = () => {const L = JSON.parse(LIVEJ); dirtyB.forEach(b => {DATA[b] = L[b]; delete SENT[b]}); dirtyB = []; if (GH.user) S('draft:' + GH.user.toLowerCase(), null); for (const id of UPLOADED) fetch('/api/photos?id=' + encodeURIComponent(id), {method:'DELETE',credentials:'same-origin'}).catch(() => {}); UPLOADED.clear(); reindex(); sel = null; hide(); render(); setRole(); st('Back to the published version')};
+    $('undo').onclick = () => {if (!undoStack.length) return; const selected = sel && sel.id,prev=JSON.parse(undoStack.pop()); DATA=prev.tree; LOOSE=prev.loose||[]; cur=Number.isInteger(prev.current)?prev.current:cur; undoState=historyState(); reindex(); refreshDirty(); render(); if(selected&&P.has(selected))show(P.get(selected).n);else{sel=null;hide()} setRole(); st('Undid the most recent change')};
+    $('dis').onclick = () => {const L = JSON.parse(LIVEJ); dirtyB.forEach(b => {DATA[b] = L[b]; delete SENT[b]}); dirtyB = []; LOOSE = []; undoStack = []; undoState = historyState(); if (GH.user) {S('draft:' + GH.user.toLowerCase(), null); S('loose:' + GH.user.toLowerCase(), null)} for (const id of UPLOADED) fetch('/api/photos?id=' + encodeURIComponent(id), {method:'DELETE',credentials:'same-origin'}).catch(() => {}); UPLOADED.clear(); reindex(); sel = null; hide(); render(); setRole(); st('Back to the published version')};
 
 
     /* ---- GitHub Pages prototype login ---- */
