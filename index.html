@@ -1770,7 +1770,7 @@
     const dead = (n, i) => typeof (n.dd || [])[i] === 'string';
     const BGO = ['', 'A+', 'A−', 'B+', 'B−', 'AB+', 'AB−', 'O+', 'O−'];
     function canManagePhotos() {return role === 'admin' && !!(ME && ME.github)}
-    function getPh(pid) {return Promise.resolve(PH[pid] || ('photos/' + pid + '.jpg'))}
+    function getPh(pid) {return Promise.resolve(ME ? (PH[pid] || ('photos/' + pid + '.jpg')) : '')}
     function pick(n, i) {
       const f = document.createElement('input'); f.type = 'file'; f.accept = '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp'; f.onchange = () => {
         const file = f.files[0]; if (!file) return;
@@ -2088,5 +2088,6 @@
   <script id="direct-save">
 (function(){if(window.__directSaveD1)return;window.__directSaveD1=true;const toast=t=>{let e=document.getElementById('ds-toast');if(!e){e=document.createElement('div');e.id='ds-toast';e.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99;background:#1f2937;color:white;padding:12px 18px;border-radius:12px';document.body.appendChild(e)}e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',5000)};const oldRole=setRole;setRole=function(){oldRole.apply(this,arguments);try{$('sub').textContent='💾 Save changes'}catch(e){}};$('sub').onclick=async function(){const bs=unsentB();if(!bs.length)return;const btn=$('sub');btn.disabled=true;btn.textContent='⏳ Saving…';try{const r=await fetch('/api/tree',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:META,tree:DATA})});const out=await r.json().catch(()=>({}));if(!r.ok)throw new Error(out.error||('Save failed ('+r.status+')'));LIVEJ=JSON.stringify(out.tree);DATA=JSON.parse(LIVEJ);reindex();dirtyB=[];const keep=new Set();const collectPhotos=n=>{(n.ph||[]).forEach(id=>{if(id)keep.add(id)});(n.kids||[]).forEach(collectPhotos)};DATA.forEach(collectPhotos);for(const id of UPLOADED)if(!keep.has(id))fetch(`/api/photos?id=${encodeURIComponent(id)}`,{method:"DELETE",credentials:"same-origin"}).catch(()=>{});UPLOADED.clear();bs.forEach(b=>SENT[b]=hash(JSON.stringify(DATA[b])));if(GH.user)S('draft:'+GH.user.toLowerCase(),null);render();setRole();toast('✅ Saved. Everyone will see the updates.');st('Saved to shared family database')}catch(e){modal('<h3>Could not save</h3><div class="warn">'+E(e.message||'Please try again.')+'</div><button id="retry">Try again</button>',m=>m.querySelector('#retry').onclick=()=>{$('modal').style.display='none';$('sub').onclick()})}finally{btn.disabled=false;setRole()}}})();
 </script>
+<a href="privacy.html" style="position:fixed;left:10px;bottom:6px;z-index:20;color:#d6bd89;font:12px system-ui,sans-serif;text-decoration:underline">Privacy</a>
 </body>
 </html>

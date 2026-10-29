@@ -17,7 +17,7 @@ relative edits on the site ──► pull request (branch + diff) ──► auto
 | Person | Edit | Merge / approve |
 |---|---|---|
 | **Admin** (your GitHub account) | everything | ✅ only you |
-| **Family editors** listed in `data/access.json` | only their assigned grandparent branch(es) and photos | ❌ |
+| **Family editors** listed in `data/access.json` | only their assigned grandparent branch(es) | ❌ |
 | Everyone else | nothing | ❌ |
 
 **This is enforced by GitHub, not by the web page**, in three layers:
@@ -51,18 +51,20 @@ The build uses `site/index.html` and `site/login.html` when those files exist, a
    - *Settings → Environment variables* (add to **Production and Preview**, as **Encrypted**):
      - `SESSION_SECRET` — a long random string (32+ characters; e.g. run `openssl rand -base64 48`).
      - `AUTH_USERS` — the list of accounts: run `node scripts/make-user.mjs print` and paste the output (see *Creating logins*).
+   - For private Google Drive photo storage, follow [`SETUP-GOOGLE-DRIVE.md`](SETUP-GOOGLE-DRIVE.md) after the D1 and login setup.
    - *Optional but recommended* — lock-out after 5 wrong passwords: create a **KV namespace** and bind it to the project as `LOGIN_KV` (Settings → Functions → KV namespace bindings). Also add a Cloudflare *Rate limiting rule* for `/api/login` if you like.
 6. **Invite your editors** as collaborators on the GitHub repo (*Settings → Collaborators → Add people*, role **Write**). They can open pull requests but the ruleset stops them merging.
 
 ## Who sees what
 | | Anyone with the link | Signed-in family member |
 |---|---|---|
-| View the tree, photos, passed-away marks | ✅ | ✅ |
+| View the tree and passed-away marks | ✅ | ✅ |
+| View family photos | ❌ | ✅ |
 | Phone, address, blood group | 🔒 hidden | ✅ |
 | Edit / propose changes | ❌ (the Edit button takes them to the sign-in page) | ✅ only their assigned branches |
 | Merge/approve | ❌ | ❌ (only you, on GitHub) |
 
-The hiding is done on the server: visitors are sent `data.public.json` (built without phone, address and blood group), so those details are never sent to them. If you want **everything** public, add the Cloudflare environment variable `PUBLIC_SHOW_CONTACT` = `1`. Photos are public either way. The site asks search engines not to index it, but anyone who has the link can open it and share it.
+The hiding is done on the server: visitors are sent `data.public.json` (built without phone, address and blood group), so those details are never sent to them. If you want **everything** public, add the Cloudflare environment variable `PUBLIC_SHOW_CONTACT` = `1`. Photos require a signed-in family account. The site asks search engines not to index it, but anyone who has the link can open and share the public tree.
 
 ## Creating logins (no sign-up on the site)
 Logging in is only for editing. **There is no register, "create account" or password-reset option** — accounts exist only because you created them:
@@ -76,7 +78,7 @@ node scripts/make-user.mjs print               # → paste into Cloudflare env v
 - Give each person their username and password privately. Only **salted password hashes** are kept (in `.auth/users.json` on your computer — git-ignored — and in the Cloudflare variable). Nobody, including you, can read a password back.
 - `--github` links the login to the person's GitHub username so the site knows which branches they may edit without asking them.
 - **Remove someone**: `remove`, `print`, update `AUTH_USERS` — their session stops working at once. To sign everybody out, add/raise an env var `SESSION_EPOCH` (e.g. `2`).
-- The password check, the session cookie (HttpOnly, SameSite=Strict, 7 days) and the rules for what a visitor may fetch run on Cloudflare's server in `functions/` — not in the browser. Visitors can read only the page, the public data and photos; the access list and everything else need a session.
+- The password check, the session cookie (HttpOnly, SameSite=Strict, 7 days) and the rules for what a visitor may fetch run on Cloudflare's server in `functions/` — not in the browser. Visitors can read the page and public data; photos, the access list, and other private resources need a session.
 - Try it on your computer first: copy `.dev.vars.example` to `.dev.vars`, fill it in, then `node scripts/build.mjs && node scripts/dev-server.mjs` → http://localhost:8788 .
 
 ## Adding / changing an editor
@@ -104,9 +106,9 @@ Use **Cloudflare Pages with Functions and the required encrypted environment var
 - **Tested here:** the login (36 checks: visitors get only the public copy, wrong/unknown user, forged or expired cookies, removed users, lock-out) and in a real browser (login, sign-out, mobile); the `validate` script (24 scenarios in a real temporary git repo, plus a check that files made by the site pass them: allowed edits pass; wrong branch, edits to rules/workflows, bad data, bad photos, missing assignments all fail) and the site (editing, the pull-request calls against a *simulated* GitHub API, mobile layout).
 - **Not tested here — please try once:** the GitHub workflows and ruleset on real GitHub, and the Cloudflare settings (Pages Functions, environment variables, KV). Do a dry run: as one editor open a pull request that edits their branch (should pass), then one that edits another branch (should fail and be unmergeable).
 - The username typed into the site only tells the page which branches to show. The real identity is the **GitHub account that opens the pull request**; that is what the checks use.
-- **Reading is public by design:** anyone with the link sees the whole tree (names, relationships, photos, passed-away marks). Signed-in family members also see phone/address/blood group; repo collaborators can read every file. If branches must be hidden from each other, you need separate sites/repos.
+- **Reading is public by design:** anyone with the link sees the tree (names, relationships, passed-away marks). Photos and phone/address/blood group require sign-in. Repo collaborators can read every file. If branches must be hidden from each other, you need separate sites/repos.
 - Website login is your own username/password system (above). GitHub accounts are only needed to *propose changes*. Passwords are not recoverable; if someone forgets theirs, run `passwd` and send the new one.
 - Limits of this login: it is as strong as the passwords you hand out (the generated 16-character ones are strong) and has no "forgot password" email or two-step verification. Cloudflare Access (Google/email code) can be added in front as an extra layer if you want one.
 - Anyone who has already opened the tree can of course keep what they saw; removing them only stops future access.
-- Photos: family admins can add, replace, or remove a photo in each person's slot. JPEG, PNG, or WebP files up to 10 MB are previewed, resized to ~320 px and stored as JPEGs up to 600 KB in Cloudflare R2. Create the `family-tree-photos` bucket and bind it as `FAMILY_PHOTOS` before deploying; D1 stores photo IDs only. Photos remain viewable according to the site's existing family-tree visibility.
+- Photos: family admins can add, replace, or remove a photo in each person's slot. JPEG, PNG, or WebP files up to 10 MB are previewed, resized to ~320 px, and stored as JPEGs up to 600 KB in a private Google Drive folder. Only signed-in family members can view them. Follow [`SETUP-GOOGLE-DRIVE.md`](SETUP-GOOGLE-DRIVE.md) before enabling uploads.
 - One slot in the Anthony / Maryam branch had no name in the original artwork; it is shown as "(name needed)".

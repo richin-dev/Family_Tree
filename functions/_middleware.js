@@ -1,10 +1,10 @@
-// Public to read, login to edit.
-//  - Anyone with the link can load the page, the tree and the photos (the public copy hides phone, address and blood group).
-//  - Signed-in family members get the full data and can edit. Everything else (e.g. the access list) needs a session.
+// Public to read the tree, login to edit; family photos require a signed-in session.
+//  - Anyone with the link can load the page and public tree (without phone, address and blood group).
+//  - Signed-in family members get the full data and photos. Everything else needs a session.
 import { readSession, secretOk, json } from '../lib/auth.js';
 
-const PUBLIC_GET = [/^\/login$/, /^\/$/, /^\/index\.html$/, /^\/login\.html$/, /^\/data\.json$/, /^\/data\.public\.json$/, /^\/photos\/p[a-z0-9]{3,24}\.jpg$/, /^\/favicon\.ico$/, /^\/api\/me$/, /^\/api\/tree$/];
-const OPEN_ANY = new Set(['/api/login', '/api/logout']);
+const PUBLIC_GET = [/^\/login$/, /^\/$/, /^\/index\.html$/, /^\/login\.html$/, /^\/privacy\.html$/, /^\/data\.json$/, /^\/data\.public\.json$/, /^\/favicon\.ico$/, /^\/api\/me$/, /^\/api\/tree$/];
+const OPEN_ANY = new Set(['/api/login', '/api/logout', '/api/drive/callback']);
 
 export async function onRequest(ctx) {
   const { request, env } = ctx;

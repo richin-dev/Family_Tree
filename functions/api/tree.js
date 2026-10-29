@@ -1,4 +1,5 @@
 import { readSession, json, secretOk } from '../../lib/auth.js';
+import { deleteDrivePhoto, findDrivePhoto } from '../../lib/google-drive.js';
 
 async function sessionUser(request, env) {
   if (!secretOk(env)) return null;
@@ -56,9 +57,14 @@ async function handlePut(ctx) {
   catch (e) { return json({error:e.message||'Invalid photo data.'},400); }
   const photoChanged=[...new Set([...beforePhotos.people.keys(),...afterPhotos.people.keys()])].some(id=>beforePhotos.people.get(id)!==afterPhotos.people.get(id));
   if (photoChanged && gh!==admin) return json({error:'Only the family admin can add, change, or remove photos.'},403);
-  if (photoChanged && !ctx.env.FAMILY_PHOTOS) return json({error:'Photo storage is not configured. Create and bind the FAMILY_PHOTOS R2 bucket.'},503);
   if (photoChanged) {
-    for (const id of afterPhotos.ids) if (!beforePhotos.ids.has(id) && !await ctx.env.FAMILY_PHOTOS.head(`photos/${id}.jpg`)) return json({error:'A selected photo is not available in family photo storage.'},400);
+    if (!ctx.env.FAMILY_DB) return json({error:'Family photo storage requires the D1 database binding.'},503);
+    for (const id of afterPhotos.ids) if (!beforePhotos.ids.has(id)) {
+      let stored;
+      try { stored = await findDrivePhoto(ctx,id); }
+      catch { return json({error:'Family photo storage is not initialized. Apply the latest D1 migration.'},503); }
+      if (!stored) return json({error:'A selected photo is not available in Google Drive.'},400);
+    }
   }
   const allowedSet=new Set(gh===admin?body.files:allowed);
   if(body.files.some((f,i)=>f!==current.files[i]) || body.files.length!==current.files.length) return json({error:'Branch list cannot be changed here.'},400);
@@ -71,8 +77,8 @@ async function handlePut(ctx) {
   const next={files:current.files,tree:nextTree};
   await ctx.env.FAMILY_DB.prepare('INSERT INTO family_tree(id,payload,updated_by) VALUES(1,?,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,updated_at=CURRENT_TIMESTAMP,updated_by=excluded.updated_by').bind(JSON.stringify(next),user.u).run();
   if (photoChanged) for (const id of beforePhotos.ids) if (!afterPhotos.ids.has(id)) {
-    try { await ctx.env.FAMILY_PHOTOS.delete(`photos/${id}.jpg`); }
-    catch { console.error('Could not remove an unreferenced family photo from R2.'); }
+    try { await deleteDrivePhoto(ctx,id); }
+    catch { console.error('Could not remove an unreferenced family photo from Google Drive.'); }
   }
   return json(next);
 }

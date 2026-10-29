@@ -37,6 +37,7 @@ function copyHtml(src, fallback, dest) {
 copyHtml('site/index.html', 'index.html', 'dist/index.html');
 copyHtml('site/login.html', 'login.html', 'dist/login.html');
 fs.copyFileSync('site/pages-auth.js', 'dist/pages-auth.js');
+fs.copyFileSync('privacy.html', 'dist/privacy.html');
 fs.copyFileSync('site/auth-public.json', 'dist/auth-public.json');
 
 // Run the login Function on every request, including static files and photos.
