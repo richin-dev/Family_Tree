@@ -2,7 +2,7 @@
 
 This project stores uploaded photos in a private Google Drive folder. Only a signed-in family user can view photos; only the family admin can upload, replace, or remove them. Google Drive files are never made public. Cloudflare Pages streams a photo to an authenticated user after checking the family tree and session.
 
-The editor accepts JPEG, PNG, or WebP images up to 10 MB, resizes them, and sends a JPEG up to 600 KB. D1 stores the Drive file ID and the person's existing photo ID. The Google refresh token is encrypted in D1 using `SESSION_SECRET`.
+The editor accepts JPEG/JPG or PNG originals up to 2 MiB (2,097,152 bytes) and 40 megapixels. The admin can draw a freeform crop; the editor keeps that crop's aspect ratio, scales its longest side to at most 300 px, converts it to JPEG, and rejects results over 600,000 bytes. The upload endpoint independently validates that the received data is a JPEG no larger than 300 × 300 pixels and 600,000 bytes. D1 stores the Drive file ID and the person's existing photo ID. The Google refresh token is encrypted in D1 using `SESSION_SECRET`.
 
 ## Google Cloud setup
 

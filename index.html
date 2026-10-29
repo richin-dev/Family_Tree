@@ -1772,36 +1772,45 @@
     function canManagePhotos() {return role === 'admin' && !!(ME && ME.github)}
     function getPh(pid) {return Promise.resolve(ME ? (PH[pid] || ('photos/' + pid + '.jpg')) : '')}
     function pick(n, i) {
-      const f = document.createElement('input'); f.type = 'file'; f.accept = '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp'; f.onchange = () => {
+      const MAX_SOURCE_BYTES = 2 * 1024 * 1024, MAX_SOURCE_PIXELS = 40000000, MAX_OUTPUT_EDGE = 300, MAX_OUTPUT_BYTES = 600000;
+      const f = document.createElement('input'); f.type = 'file'; f.accept = '.jpg,.jpeg,.png,image/jpeg,image/png'; f.onchange = () => {
         const file = f.files[0]; if (!file) return;
-        const supported = /^(image\/(jpeg|png|webp))$/i.test(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name);
-        if (!supported) {alert('Choose a JPEG, PNG, or WebP image.'); return}
-        if (file.size > 10 * 1024 * 1024) {alert('Choose an image smaller than 10 MB. It will be resized before upload.'); return}
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'], extensionType = ({jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png'})[(file.name.split('.').pop() || '').toLowerCase()];
+        if (file.size <= 0) {alert('Choose an image file that is not empty.'); return}
+        if (file.size > MAX_SOURCE_BYTES) {alert('Choose a JPEG or PNG image no larger than 2 MB (2,097,152 bytes).'); return}
+        if ((file.type && !allowedTypes.includes(file.type.toLowerCase())) || (!file.type && !extensionType)) {alert('Choose a JPEG (.jpg/.jpeg) or PNG (.png) image.'); return}
         const previewUrl = URL.createObjectURL(file), img = new Image();
         img.onerror = () => {URL.revokeObjectURL(previewUrl); alert('This image could not be opened. Choose another file.')};
-        img.onload = () => {
-          if (img.width * img.height > 40000000) {URL.revokeObjectURL(previewUrl); alert('This image is too large to process. Choose a smaller image.'); return}
-          const scale = Math.min(1, 320 / Math.max(img.width, img.height)), cv = document.createElement('canvas');
-          cv.width = Math.max(1, Math.round(img.width * scale)); cv.height = Math.max(1, Math.round(img.height * scale));
-          const cx = cv.getContext('2d'); if (!cx) {URL.revokeObjectURL(previewUrl); alert('This browser could not prepare the photo.'); return}
-          cx.drawImage(img, 0, 0, cv.width, cv.height);
-          cv.toBlob(blob => {
-            if (!blob) {URL.revokeObjectURL(previewUrl); alert('This image could not be converted to JPEG.'); return}
-            if (blob.size > 600000) {URL.revokeObjectURL(previewUrl); alert('The resized image is larger than 600 KB. Choose another photo.'); return}
-            modal('<h3>Preview photo</h3><div class="m">' + E(n.names[i] || 'Family member') + '</div><img alt="Photo preview" src="' + previewUrl + '" style="display:block;max-width:100%;max-height:320px;margin:12px auto;border-radius:12px"><div class="m">' + cv.width + ' × ' + cv.height + ' · ' + Math.ceil(blob.size / 1024) + ' KB · saved as JPEG</div><div id="photo-error" class="warn"></div><button id="photo-upload">Use this photo</button><button id="photo-cancel">Cancel</button>', m => {
-              m.querySelector('#photo-cancel').onclick = () => {URL.revokeObjectURL(previewUrl); $('modal').style.display = 'none'};
-              m.querySelector('#photo-upload').onclick = async ev => {
-                const button = ev.currentTarget; button.disabled = true; button.textContent = 'Uploading…';
-                try {
-                  const response = await fetch('/api/photos', {method:'POST',credentials:'same-origin',headers:{'Content-Type':'image/jpeg'},body:blob});
-                  const result = await response.json().catch(() => ({}));
-                  if (!response.ok || !/^p[a-z0-9]{3,24}$/.test(result.id || '')) throw new Error(result.error || ('Upload failed (' + response.status + ').'));
-                  n.ph = n.ph || []; n.ph[i] = result.id; PH[result.id] = 'photos/' + result.id + '.jpg'; UPLOADED.add(result.id); URL.revokeObjectURL(previewUrl); $('modal').style.display = 'none'; ch(n);
-                } catch (err) {button.disabled = false; button.textContent = 'Use this photo'; m.querySelector('#photo-error').textContent = err.message || 'The photo could not be uploaded.'}
-              };
-            });
-          }, 'image/jpeg', .78);
-        };
+        const openCrop = () => modal('<h3>Crop photo</h3><div class="m">' + E(n.names[i] || 'Family member') + ' · Drag on the image to select any crop shape.</div><div style="text-align:center;margin:12px 0"><div id="crop-stage" style="position:relative;display:inline-block;max-width:100%;touch-action:none;cursor:crosshair"><img id="crop-source" alt="Choose a photo crop" src="' + previewUrl + '" style="display:block;max-width:100%;max-height:320px;width:auto;height:auto;pointer-events:none"><div id="crop-box" style="position:absolute;box-sizing:border-box;border:2px solid #ffe08a;box-shadow:0 0 0 9999px rgba(0,0,0,.55);pointer-events:none"></div></div></div><div class="m">Original: ' + img.width + ' × ' + img.height + ' · JPEG/PNG · maximum 2 MB. The saved JPEG will be at most 300 px on its longest side.</div><div id="crop-error" class="warn"></div><button id="crop-reset">Use full image</button><button id="crop-preview">Preview crop</button><button id="crop-cancel">Cancel</button>', m => {
+          const stage=m.querySelector('#crop-stage'), source=m.querySelector('#crop-source'), box=m.querySelector('#crop-box'); let crop=null, drag=null;
+          const setCrop=(x,y,w,h)=>{crop={x,y,w,h};box.style.left=x+'px';box.style.top=y+'px';box.style.width=w+'px';box.style.height=h+'px'};
+          const initCrop=()=>{const r=source.getBoundingClientRect(),s=stage.getBoundingClientRect();if(r.width&&r.height)setCrop(r.left-s.left,r.top-s.top,r.width,r.height)};
+          source.onload=initCrop; requestAnimationFrame(initCrop);
+          const point=ev=>{const r=source.getBoundingClientRect();return{x:Math.max(0,Math.min(r.width,ev.clientX-r.left)),y:Math.max(0,Math.min(r.height,ev.clientY-r.top)),r}};
+          stage.onpointerdown=ev=>{const p=point(ev);if(!p.r.width||!p.r.height)return;stage.setPointerCapture(ev.pointerId);drag={x:p.x,y:p.y};setCrop(p.x,p.y,1,1);ev.preventDefault()};
+          stage.onpointermove=ev=>{if(!drag)return;const p=point(ev);setCrop(Math.min(drag.x,p.x),Math.min(drag.y,p.y),Math.abs(p.x-drag.x),Math.abs(p.y-drag.y))};
+          stage.onpointerup=ev=>{if(!drag)return;const p=point(ev);setCrop(Math.min(drag.x,p.x),Math.min(drag.y,p.y),Math.abs(p.x-drag.x),Math.abs(p.y-drag.y));drag=null};
+          m.querySelector('#crop-reset').onclick=initCrop;
+          m.querySelector('#crop-cancel').onclick=()=>{URL.revokeObjectURL(previewUrl);$('modal').style.display='none'};
+          m.querySelector('#crop-preview').onclick=()=>{
+            const r=source.getBoundingClientRect(), cr=stage.getBoundingClientRect(), scaleX=img.naturalWidth/r.width, scaleY=img.naturalHeight/r.height;
+            if(!crop||crop.w<8||crop.h<8){m.querySelector('#crop-error').textContent='Drag to select a larger crop area.';return}
+            const sx=(crop.x-(r.left-cr.left))*scaleX,sy=(crop.y-(r.top-cr.top))*scaleY,sw=crop.w*scaleX,sh=crop.h*scaleY,outScale=Math.min(1,MAX_OUTPUT_EDGE/Math.max(sw,sh)),cv=document.createElement('canvas');
+            cv.width=Math.max(1,Math.round(sw*outScale));cv.height=Math.max(1,Math.round(sh*outScale));const cx=cv.getContext('2d');if(!cx){m.querySelector('#crop-error').textContent='This browser could not prepare the photo.';return}
+            cx.drawImage(img,sx,sy,sw,sh,0,0,cv.width,cv.height);
+            cv.toBlob(blob=>{
+              if(!blob){m.querySelector('#crop-error').textContent='This image could not be converted to JPEG.';return}
+              if(blob.size>MAX_OUTPUT_BYTES){m.querySelector('#crop-error').textContent='The cropped JPEG must be 600 KB or smaller.';return}
+              const croppedUrl=URL.createObjectURL(blob);
+              modal('<h3>Preview photo</h3><div class="m">' + E(n.names[i] || 'Family member') + '</div><img alt="Cropped photo preview" src="' + croppedUrl + '" style="display:block;max-width:100%;max-height:300px;margin:12px auto;border-radius:12px"><div class="m">' + cv.width + ' × ' + cv.height + ' px · ' + Math.ceil(blob.size/1024) + ' KB · JPEG</div><div id="photo-error" class="warn"></div><button id="photo-upload">Use this photo</button><button id="photo-back">Back to crop</button><button id="photo-cancel">Cancel</button>',m2=>{
+                m2.querySelector('#photo-back').onclick=()=>{URL.revokeObjectURL(croppedUrl);openCrop()};
+                m2.querySelector('#photo-cancel').onclick=()=>{URL.revokeObjectURL(croppedUrl);URL.revokeObjectURL(previewUrl);$('modal').style.display='none'};
+                m2.querySelector('#photo-upload').onclick=async ev=>{const button=ev.currentTarget;button.disabled=true;button.textContent='Uploading…';try{const response=await fetch('/api/photos',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'image/jpeg'},body:blob});const result=await response.json().catch(()=>({}));if(!response.ok||!/^p[a-z0-9]{3,24}$/.test(result.id||''))throw new Error(result.error||('Upload failed ('+response.status+').'));n.ph=n.ph||[];n.ph[i]=result.id;PH[result.id]='photos/'+result.id+'.jpg';UPLOADED.add(result.id);URL.revokeObjectURL(croppedUrl);URL.revokeObjectURL(previewUrl);$('modal').style.display='none';ch(n)}catch(err){button.disabled=false;button.textContent='Use this photo';m2.querySelector('#photo-error').textContent=err.message||'The photo could not be uploaded.'}};
+              });
+            },'image/jpeg',.78);
+          };
+        });
+        img.onload = () => {if(!img.width||!img.height||img.width*img.height>MAX_SOURCE_PIXELS){URL.revokeObjectURL(previewUrl);alert('The original image must be no larger than 40 megapixels. Choose a smaller image.');return}openCrop()};
         img.src = previewUrl;
       }; f.click()
     }
