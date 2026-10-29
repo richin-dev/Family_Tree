@@ -42,6 +42,7 @@ copyHtml('site/login.html', 'login.html', 'dist/login.html');
 fs.copyFileSync('site/pages-auth.js', 'dist/pages-auth.js');
 fs.copyFileSync('privacy.html', 'dist/privacy.html');
 fs.copyFileSync('site/auth-public.json', 'dist/auth-public.json');
+if (fs.existsSync('site/assets')) fs.cpSync('site/assets', 'dist/assets', { recursive: true });
 
 // Run the login Function on every request, including static files and photos.
 fs.writeFileSync('dist/_routes.json', JSON.stringify({ version: 1, include: ['/*'], exclude: [] }));
