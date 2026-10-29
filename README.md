@@ -1,3 +1,9 @@
+# Family Tree — direct-save edition
+
+**This edited project uses Cloudflare D1 for shared family-data saving.** Login and branch permissions remain in place. Once the new version is deployed and D1 is bound, edits save directly to the database without GitHub commits or pushes. Follow [`SETUP-DIRECT-SAVE.md`](SETUP-DIRECT-SAVE.md) before deployment. Do not host this version on GitHub Pages; it requires Cloudflare Pages Functions.
+
+---
+
 # Family Tree — pull-request edition
 
 Every change to the family tree is a **pull request**. Only the admin can merge it. The tree you see on the website is built from what is merged — nothing else.
@@ -102,5 +108,5 @@ Use **Cloudflare Pages with Functions and the required encrypted environment var
 - Website login is your own username/password system (above). GitHub accounts are only needed to *propose changes*. Passwords are not recoverable; if someone forgets theirs, run `passwd` and send the new one.
 - Limits of this login: it is as strong as the passwords you hand out (the generated 16-character ones are strong) and has no "forgot password" email or two-step verification. Cloudflare Access (Google/email code) can be added in front as an extra layer if you want one.
 - Anyone who has already opened the tree can of course keep what they saw; removing them only stops future access.
-- Photos: JPEG only, ≤ 600 KB, added through a pull request (the site resizes them to ~320 px).
+- Photos: family admins can add, replace, or remove a photo in each person's slot. JPEG, PNG, or WebP files up to 10 MB are previewed, resized to ~320 px and stored as JPEGs up to 600 KB in Cloudflare R2. Create the `family-tree-photos` bucket and bind it as `FAMILY_PHOTOS` before deploying; D1 stores photo IDs only. Photos remain viewable according to the site's existing family-tree visibility.
 - One slot in the Anthony / Maryam branch had no name in the original artwork; it is shown as "(name needed)".

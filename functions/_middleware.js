@@ -3,14 +3,13 @@
 //  - Signed-in family members get the full data and can edit. Everything else (e.g. the access list) needs a session.
 import { readSession, secretOk, json } from '../lib/auth.js';
 
-const PUBLIC_GET = [/^\/$/, /^\/index\.html$/, /^\/login\.html$/, /^\/data\.json$/, /^\/data\.public\.json$/, /^\/photos\/p[a-z0-9]{3,24}\.jpg$/, /^\/favicon\.ico$/, /^\/api\/me$/];
+const PUBLIC_GET = [/^\/login$/, /^\/$/, /^\/index\.html$/, /^\/login\.html$/, /^\/data\.json$/, /^\/data\.public\.json$/, /^\/photos\/p[a-z0-9]{3,24}\.jpg$/, /^\/favicon\.ico$/, /^\/api\/me$/, /^\/api\/tree$/];
 const OPEN_ANY = new Set(['/api/login', '/api/logout']);
 
 export async function onRequest(ctx) {
   const { request, env } = ctx;
   const url = new URL(request.url), path = url.pathname, method = request.method;
   if (!secretOk(env)) return new Response('Server not configured: set a SESSION_SECRET of at least 32 characters.', { status: 500 });
-  if (path === '/login') return Response.redirect(url.origin + '/login.html', 302);
 
   const user = await readSession(env, request.headers.get('Cookie'));
   ctx.data = { user };

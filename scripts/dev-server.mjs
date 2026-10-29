@@ -10,7 +10,7 @@ if (fs.existsSync('.dev.vars')) for (const l of fs.readFileSync('.dev.vars', 'ut
 const port = +(process.env.PORT || 8788), root = path.resolve('dist');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.json': 'application/json', '.jpg': 'image/jpeg', '.js': 'text/javascript' };
 const mw = (await import('../functions/_middleware.js')).onRequest;
-const routes = { '/api/login': await import('../functions/api/login.js'), '/api/logout': await import('../functions/api/logout.js'), '/api/me': await import('../functions/api/me.js') };
+const routes = { '/api/login': await import('../functions/api/login.js'), '/api/logout': await import('../functions/api/logout.js'), '/api/me': await import('../functions/api/me.js'), '/api/tree': await import('../functions/api/tree.js') };
 
 http.createServer(async (req, res) => {
   const chunks = []; for await (const c of req) chunks.push(c);

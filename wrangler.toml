@@ -1,0 +1,12 @@
+name = "family-tree"
+compatibility_date = "2026-10-28"
+
+[[d1_databases]]
+binding = "FAMILY_DB"
+database_name = "family-tree-db"
+database_id = "23f4deea-00f8-4b79-9234-ce9037c0f056"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "FAMILY_PHOTOS"
+bucket_name = "family-tree-photos"

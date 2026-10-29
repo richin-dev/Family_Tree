@@ -1755,7 +1755,6 @@
     <div id="tree"></div>
   </div>
   <div class="side" id="side"></div>
-  <script src="pages-auth.js"></script>
   <script>
     let DATA = [];
     const GEN = {blue: ['Sky blue', 'Main family couple (1st generation)', '#29abe2'], green: ['Green', '2nd generation', '#006d46'], orange: ['Orange', '3rd generation', '#d44d00'], purple: ['Velvet', '4th generation', '#a45cf0'], teal: ['Cyan', '5th generation', '#00a39e'], pink: ['Pink', 'Female who married', '#ff4fa8'], yellow: ['Yellow', 'Pastor / nun', '#ffce00']};
@@ -1764,21 +1763,46 @@
     const $ = id => document.getElementById(id);
     const S = (k, v) => {try {if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v)} catch (e) {return null} };
     const E = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-    const PH = {}, NEWPH = {};
+    const PH = {}, NEWPH = {}, UPLOADED = new Set();
     let role = 'viewer', BR = [], dirtyB = [], SENT = {}, ACCESS = null, META = [], GH = {user: S('gh:user') || '', token: S('gh:token') || ''}, LIVEJ = '[]', loaded = false;
     let cur = 0, sel = null, ed = false, P = new Map(), open = new Set(), hits = new Set(), lastJ = '', tm = null;
     $('leg').innerHTML = Object.values(GEN).map(g => '<span><b style="background:' + g[2] + '"></b>' + g[0] + ' = ' + g[1] + '</span>').join('') + '<span>✝ Grey name = passed away</span><span><b style="background:#000;color:#777"></b>Black slot = couple both passed away</span>';
     const dead = (n, i) => typeof (n.dd || [])[i] === 'string';
     const BGO = ['', 'A+', 'A−', 'B+', 'B−', 'AB+', 'AB−', 'O+', 'O−'];
+    function canManagePhotos() {return role === 'admin' && !!(ME && ME.github)}
     function getPh(pid) {return Promise.resolve(PH[pid] || ('photos/' + pid + '.jpg'))}
     function pick(n, i) {
-      const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*'; f.onchange = () => {
-        const file = f.files[0]; if (!file) return; const img = new Image(), u = URL.createObjectURL(file);
+      const f = document.createElement('input'); f.type = 'file'; f.accept = '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp'; f.onchange = () => {
+        const file = f.files[0]; if (!file) return;
+        const supported = /^(image\/(jpeg|png|webp))$/i.test(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name);
+        if (!supported) {alert('Choose a JPEG, PNG, or WebP image.'); return}
+        if (file.size > 10 * 1024 * 1024) {alert('Choose an image smaller than 10 MB. It will be resized before upload.'); return}
+        const previewUrl = URL.createObjectURL(file), img = new Image();
+        img.onerror = () => {URL.revokeObjectURL(previewUrl); alert('This image could not be opened. Choose another file.')};
         img.onload = () => {
-          const s = Math.min(1, 320 / Math.max(img.width, img.height)), cv = document.createElement('canvas'); cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s); cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); URL.revokeObjectURL(u);
-          const d = cv.toDataURL('image/jpeg', .72), pid = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); PH[pid] = d; NEWPH[pid] = d;
-          n.ph = n.ph || []; n.ph[i] = pid; ch(n)
-        }; img.src = u
+          if (img.width * img.height > 40000000) {URL.revokeObjectURL(previewUrl); alert('This image is too large to process. Choose a smaller image.'); return}
+          const scale = Math.min(1, 320 / Math.max(img.width, img.height)), cv = document.createElement('canvas');
+          cv.width = Math.max(1, Math.round(img.width * scale)); cv.height = Math.max(1, Math.round(img.height * scale));
+          const cx = cv.getContext('2d'); if (!cx) {URL.revokeObjectURL(previewUrl); alert('This browser could not prepare the photo.'); return}
+          cx.drawImage(img, 0, 0, cv.width, cv.height);
+          cv.toBlob(blob => {
+            if (!blob) {URL.revokeObjectURL(previewUrl); alert('This image could not be converted to JPEG.'); return}
+            if (blob.size > 600000) {URL.revokeObjectURL(previewUrl); alert('The resized image is larger than 600 KB. Choose another photo.'); return}
+            modal('<h3>Preview photo</h3><div class="m">' + E(n.names[i] || 'Family member') + '</div><img alt="Photo preview" src="' + previewUrl + '" style="display:block;max-width:100%;max-height:320px;margin:12px auto;border-radius:12px"><div class="m">' + cv.width + ' × ' + cv.height + ' · ' + Math.ceil(blob.size / 1024) + ' KB · saved as JPEG</div><div id="photo-error" class="warn"></div><button id="photo-upload">Use this photo</button><button id="photo-cancel">Cancel</button>', m => {
+              m.querySelector('#photo-cancel').onclick = () => {URL.revokeObjectURL(previewUrl); $('modal').style.display = 'none'};
+              m.querySelector('#photo-upload').onclick = async ev => {
+                const button = ev.currentTarget; button.disabled = true; button.textContent = 'Uploading…';
+                try {
+                  const response = await fetch('/api/photos', {method:'POST',credentials:'same-origin',headers:{'Content-Type':'image/jpeg'},body:blob});
+                  const result = await response.json().catch(() => ({}));
+                  if (!response.ok || !/^p[a-z0-9]{3,24}$/.test(result.id || '')) throw new Error(result.error || ('Upload failed (' + response.status + ').'));
+                  n.ph = n.ph || []; n.ph[i] = result.id; PH[result.id] = 'photos/' + result.id + '.jpg'; UPLOADED.add(result.id); URL.revokeObjectURL(previewUrl); $('modal').style.display = 'none'; ch(n);
+                } catch (err) {button.disabled = false; button.textContent = 'Use this photo'; m.querySelector('#photo-error').textContent = err.message || 'The photo could not be uploaded.'}
+              };
+            });
+          }, 'image/jpeg', .78);
+        };
+        img.src = previewUrl;
       }; f.click()
     }
     function reindex() {P = new Map(); DATA.forEach(r => (function f(n, p) {P.set(n.id, {n, p}); n.kids.forEach(k => f(k, n))})(r, null))}
@@ -1840,7 +1864,7 @@
         h += contact(n); const l = n.link || LINKS[n.names[0]] || ''; h += /^https?:/.test(l) ? '<div class="m"><a href="' + E(l) + '" target="_blank" rel="noopener">Open link</a></div>' : (ed && !em ? '<div class="warn">You can edit only your assigned branches (' + E(BR.map(b => DATA[b] ? DATA[b].names[0] : '').join(', ')) + ').</div>' : '<div class="m">Tap ✏️ Edit to rename people, add a link, phone, address, blood group, or family members.</div>')
       }
       else {
-        h += '<h3>Edit member</h3>' + n.names.map((x, i) => '<div class="pp"><div class="r"><input class="nm" data-i="' + i + '" value="' + E(x) + '" placeholder="' + (i ? 'Spouse / partner' : 'Name') + '"><select class="bgs" data-i="' + i + '" title="Blood group">' + BGO.map(g => '<option value="' + g + '"' + (g === ((n.bg || [])[i] || '') ? ' selected' : '') + '>' + (g ? '🩸 ' + g : '🩸 —') + '</option>').join('') + '</select>' + (n.names.length > 1 ? '<button data-rm="' + i + '">×</button>' : '') + '</div><div class="r"><label class="ck"><input type="checkbox" class="dc" data-i="' + i + '"' + (dead(n, i) ? ' checked' : '') + '> ✝ Passed away</label><input class="dt" data-i="' + i + '" placeholder="Year or date" value="' + E(dead(n, i) ? (n.dd[i] || '') : '') + '"' + (dead(n, i) ? '' : ' disabled') + '></div><div class="r"><button class="up" data-i="' + i + '">📷 ' + ((n.ph || [])[i] ? 'Change' : 'Add') + ' photo</button>' + ((n.ph || [])[i] ? '<button class="rp" data-i="' + i + '">Remove</button><img class="th" alt="" data-pid="' + n.ph[i] + '">' : '') + '</div></div>').join('')
+        h += '<h3>Edit member</h3>' + n.names.map((x, i) => '<div class="pp"><div class="r"><input class="nm" data-i="' + i + '" value="' + E(x) + '" placeholder="' + (i ? 'Spouse / partner' : 'Name') + '"><select class="bgs" data-i="' + i + '" title="Blood group">' + BGO.map(g => '<option value="' + g + '"' + (g === ((n.bg || [])[i] || '') ? ' selected' : '') + '>' + (g ? '🩸 ' + g : '🩸 —') + '</option>').join('') + '</select>' + (n.names.length > 1 ? '<button data-rm="' + i + '">×</button>' : '') + '</div><div class="r"><label class="ck"><input type="checkbox" class="dc" data-i="' + i + '"' + (dead(n, i) ? ' checked' : '') + '> ✝ Passed away</label><input class="dt" data-i="' + i + '" placeholder="Year or date" value="' + E(dead(n, i) ? (n.dd[i] || '') : '') + '"' + (dead(n, i) ? '' : ' disabled') + '></div>' + (canManagePhotos() ? '<div class="r"><button class="up" data-i="' + i + '">📷 ' + ((n.ph || [])[i] ? 'Change' : 'Add') + ' photo</button>' + ((n.ph || [])[i] ? '<button class="rp" data-i="' + i + '">Remove</button><img class="th" alt="" data-pid="' + n.ph[i] + '">' : '') + '</div>' : ((n.ph || [])[i] ? '<img class="th" alt="" data-pid="' + n.ph[i] + '">' : '')) + '</div>').join('')
         + '<button id="an">+ Spouse / name line</button><div class="m">Category</div><select id="cat">' + Object.keys(GEN).map(k => '<option value="' + k + '"' + (k === n.c ? ' selected' : '') + '>' + GEN[k][0] + ' — ' + GEN[k][1] + '</option>').join('') + '</select><div class="m">Link</div><input id="lk" value="' + E(n.link || '') + '" placeholder="https://… (photo, profile, document)"><div class="m">📞 Phone number</div><input id="tel" type="tel" value="' + E(n.tel || '') + '" placeholder="+91 …"><div class="m">📍 Address</div><textarea id="addr" rows="2" placeholder="House, street, town">' + E(n.addr || '') + '</textarea><div class="r"><button id="ac">+ Add child</button><button id="dl" class="dn">Delete</button></div>'
       }
       s.innerHTML = h; s.style.display = 'block';
@@ -1938,7 +1962,7 @@
       $('who').textContent = (ME ? ME.name + ' · ' : '') + (role === 'admin' ? '👑 Admin · @' + GH.user : role === 'editor' ? '✏️ @' + GH.user : GH.user ? '👁 @' + GH.user + ' (no branches assigned)' : (ME || PUBLIC ? '👁 View only' : '👁 Public view'));
       $('gh').style.display = (ME || PUBLIC) ? '' : 'none'; $('gh').textContent = GH.user ? '🔗 @' + GH.user : '🔗 Connect GitHub';
       //$('in').style.display = 'inline-block'; $('out').style.display = ME ? 'inline-block' : 'none';
-      
+
       // >>> FIX: Centralize visibility so only one auth button can appear.
       $('in').style.display = ME ? 'none' : 'inline-block';   // CHANGED: Sign in only when logged out
       $('out').style.display = ME ? 'inline-block' : 'none'; // CHANGED: Sign out only when logged in
@@ -1998,29 +2022,26 @@
         const go = m.querySelector('#go'); if (go) go.onclick = async () => {go.disabled = true; go.textContent = 'Creating…'; try {const pr = await createPR(bs, m.querySelector('#nt').value.slice(0, 500)); bs.forEach(b => {SENT[b] = hash(JSON.stringify(DATA[b]))}); setRole(); m.innerHTML = '<h3>✅ Pull request created</h3><div class="m">The admin will review it. You will get a GitHub email when it is merged or closed.</div><a class="btn" target="_blank" rel="noopener" href="' + E(pr.html_url) + '">Open the pull request</a>'} catch (x) {go.disabled = false; go.textContent = 'Create pull request'; m.querySelector('#gm').textContent = 'Could not create it (' + (x.message || 'error').slice(0, 120) + '). You can use the manual steps below.'} }
       })
     };
-    $('dis').onclick = () => {const L = JSON.parse(LIVEJ); dirtyB.forEach(b => {DATA[b] = L[b]; delete SENT[b]}); dirtyB = []; if (GH.user) S('draft:' + GH.user.toLowerCase(), null); reindex(); sel = null; hide(); render(); setRole(); st('Back to the published version')};
+    $('dis').onclick = () => {const L = JSON.parse(LIVEJ); dirtyB.forEach(b => {DATA[b] = L[b]; delete SENT[b]}); dirtyB = []; if (GH.user) S('draft:' + GH.user.toLowerCase(), null); for (const id of UPLOADED) fetch('/api/photos?id=' + encodeURIComponent(id), {method:'DELETE',credentials:'same-origin'}).catch(() => {}); UPLOADED.clear(); reindex(); sel = null; hide(); render(); setRole(); st('Back to the published version')};
 
 
     /* ---- GitHub Pages prototype login ---- */
     let ME = null;
 
-    function whoami() {
+    async function whoami() {
+      // The Cloudflare login stores its session in an HttpOnly cookie, not sessionStorage.
+      // Ask the server whether that cookie is valid before treating the visitor as signed out.
       try {
-        ME = JSON.parse(
-          sessionStorage.getItem('ft_local_user') || 'null'
-        );
-      } catch (e) {
-        ME = null;
-      }
+        const r = await fetch('/api/me', {cache: 'no-store', credentials: 'same-origin'});
+        if (r.ok) {
+          const data = await r.json();
+          ME = data && data.user ? data : null;
+        }
+      } catch (e) { ME = null; }
 
       if (!ME || !ME.user) ME = null;
 
-      if (ME) {
-        GH = {user: ME.github || '', token: ''};
-      } else {
-        GH = {user: '', token: ''};
-      }
-
+      GH = ME ? {user: ME.github || '', token: ''} : {user: '', token: ''};
       setRole();
     }
 
@@ -2033,12 +2054,21 @@
       location.href = 'login.html';
     };
 
-    $('out').onclick = () => {
-      sessionStorage.removeItem('ft_local_user');
-      sessionStorage.removeItem('ft_local_token');
-      ME = null;
-      GH = {user: '', token: ''};
-      location.replace('./');
+    $('out').onclick = async () => {
+      const button = $('out');
+      button.disabled = true;
+      try {
+        const r = await fetch('/api/logout', {method: 'POST', credentials: 'same-origin', cache: 'no-store'});
+        if (!r.ok) throw new Error('Sign out failed (' + r.status + ').');
+        sessionStorage.removeItem('ft_local_user');
+        sessionStorage.removeItem('ft_local_token');
+        ME = null;
+        GH = {user: '', token: ''};
+        location.replace('./login.html');
+      } catch (e) {
+        button.disabled = false;
+        alert(e.message || 'Could not sign out. Please try again.');
+      }
     };
 
     /* ---- load the published data ---- */
@@ -2048,7 +2078,7 @@
       try {
         let a = await loadAccess(); PUBLIC = !!(a && a.mode === 'public'); NOCONTACT = PUBLIC && a.allowContact !== true; document.body.classList.toggle('nocontact', NOCONTACT);
         if (!PUBLIC) {await whoami(); if (ME && !a) a = await loadAccess()}
-        const d = await fetch('data.json', {cache: 'no-store', credentials: 'same-origin'}).then(r => {if (!r.ok) throw new Error('data ' + r.status); return r.json()});
+        const d = await fetch('/api/tree', {cache: 'no-store', credentials: 'same-origin'}).then(r => {if (!r.ok) throw new Error('data ' + r.status); return r.json()});
         ACCESS = a; META = d.files; LIVEJ = JSON.stringify(d.tree); DATA = JSON.parse(LIVEJ); reindex(); DATA.forEach(r => r.kids.forEach(k => open.add(k.id))); loaded = true;
         resolveRole(); loadDrafts(); render(); enter(); place(); setRole()
       }
@@ -2056,92 +2086,7 @@
     })();
   </script>
   <script id="direct-save">
-    /* Admin "Save to site": commits straight to main (no pull request). Additive: wraps existing functions, safe to add to a customised page. */
-    (function () {
-      if (window.__directSave) return; window.__directSave = 1;
-      const stripK = ks => ks.map(({tel, addr, bg, ...r}) => ({...r, kids: stripK(r.kids || [])}));
-      const normB = r => JSON.stringify({id: r.id, names: r.names, kids: NOCONTACT ? stripK(r.kids || []) : (r.kids || [])});
-      const savedKey = b => 'saved:' + b;
-      // Repo name: from data/access.json, or guessed from the web address (https://OWNER.github.io/REPO/).
-      const repoName = () => {let r = ''; try {r = REPO();} catch (x) { } if (r) return r; const m = /^([^.]+)\.github\.io$/.exec(location.hostname), seg = location.pathname.split('/')[1]; return m && seg ? m[1] + '/' + seg : '';};
-      // Admin = the signed-in token holder has ADMIN rights on the repository (GitHub decides; no need to edit access.json).
-      window.__repoAdmin = false; let adminChecked = '';
-      async function verifyAdmin() {
-        const key = (GH.user || '') + '|' + (GH.token || '') + '|' + repoName();
-        if (key === adminChecked) return; adminChecked = key;
-        let isAdm = false;
-        if (GH.token && repoName()) {try {const r = await ghApi('/repos/' + repoName()); isAdm = !!(r && r.permissions && r.permissions.admin);} catch (x) { } }
-        if (isAdm !== window.__repoAdmin) {window.__repoAdmin = isAdm; try {resolveRole(); loadDrafts(); render(); setRole();} catch (x) { } }
-      }
-      const _rr = resolveRole; resolveRole = function () {_rr.apply(this, arguments); if (window.__repoAdmin) {role = 'admin'; BR = META.map((x, i) => i);} };
-      // "saved" = committed to GitHub but the published site may not have rebuilt yet; forget it once the site catches up.
-      function cleanSaved() {try {DATA.forEach((r, b) => {const k = S(savedKey(b)); if (k && k === normB(r)) S(savedKey(b), null);});} catch (x) { } }
-      const _ld = loadDrafts; loadDrafts = function () {cleanSaved(); verifyAdmin(); return _ld.apply(this, arguments);};
-      const _sr = setRole; setRole = function () {_sr.apply(this, arguments); try {$('sub').textContent = role === 'admin' ? '💾 Save changes' : '📤 Submit changes';} catch (x) { } };
-      const _sub = $('sub').onclick; $('sub').onclick = function () {if (role === 'admin') {adminSaveNow(); return;} return _sub && _sub.apply(this, arguments);};
-      function toast(t) {
-        let e = document.getElementById('ds-toast');
-        if (!e) {e = document.createElement('div'); e.id = 'ds-toast'; e.setAttribute('role', 'status'); e.style.cssText = 'position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:12;max-width:92vw;padding:11px 16px;border-radius:12px;border:1px solid #b8893f;background:#1f1a14;color:#f0d9a0;font:600 14px system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.6);text-align:center'; document.body.appendChild(e);}
-        e.textContent = t; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => {e.style.display = 'none';}, 7000);
-      }
-      // One tap: saves straight to the site (no confirmation step).
-      async function adminSaveNow() {
-        if (!GH.token) {adminSave(); return;}                 // no token yet: explain how to connect one
-        const bs = unsentB(); if (!bs.length) return;
-        const btn = $('sub'); btn.disabled = true; btn.textContent = '⏳ Saving…';
-        try {
-          await saveDirect(bs); bs.forEach(b => {SENT[b] = hash(JSON.stringify(DATA[b]));});
-          toast('✅ Saved — the live site updates in about a minute'); st('Saved to GitHub — live in about a minute');
-        } catch (x) {
-          const msg = String(x.message || 'error');
-          modal('<h3>Could not save</h3><div class="warn">' + E(saveErr(x, msg)) + '</div><button id="rt">Try again</button>', m => {m.querySelector('#rt').onclick = () => {$('modal').style.display = 'none'; adminSaveNow();};});
-        } finally {btn.disabled = false; setRole();}
-      }
-      function saveErr(x, msg) {
-        return x.conflict
-          ? '“' + x.conflict + '” was changed on GitHub since you opened this page (for example a pull request was merged). Reload the page, then repeat your edit so nothing is overwritten.'
-          : 'Could not save (' + msg.slice(0, 140) + ')' + (/protected|rule|bypass/i.test(msg) ? ' — in the repository ruleset, set “Repository admin” to “Always allow” in the bypass list.' : (x.status === 401 || x.status === 403 || x.status === 404 ? ' — check the token is still valid and has Contents: read & write on this repository.' : (x.status === 409 || x.status === 422 ? ' — GitHub says the file changed; reload and retry.' : '')));
-      }
-
-      async function remoteBranch(b) {
-        const f = await ghApi('/repos/' + repoName() + '/contents/data/branches/' + encodeURIComponent(META[b]) + '?ref=main');
-        return {sha: f.sha, obj: JSON.parse(decodeURIComponent(escape(atob(f.content.replace(/\s/g, '')))))};
-      }
-      async function saveDirect(bs) {
-        const repo = repoName(), L = JSON.parse(LIVEJ), ph = newPhotos(bs), cur = {};
-        for (const b of bs) {            // never overwrite something that changed on GitHub since this page loaded
-          const r = await remoteBranch(b); cur[b] = r; const rem = normB(r.obj);
-          if (rem !== normB(L[b]) && rem !== S(savedKey(b))) {const e = new Error('conflict'); e.conflict = DATA[b].names.join(' / '); throw e;}
-        }
-        const put = (path, content, msg, sha) => ghApi('/repos/' + repo + '/contents/' + path, {method: 'PUT', body: JSON.stringify({message: msg, content, branch: 'main', sha})});
-        for (const id of Object.keys(ph)) {
-          let sha; try {sha = (await ghApi('/repos/' + repo + '/contents/data/photos/' + id + '.jpg?ref=main')).sha;} catch (x) {if (x.status !== 404) throw x;}
-          await put('data/photos/' + id + '.jpg', ph[id].split(',')[1], 'Add photo ' + id, sha);
-        }
-        for (const b of bs) {await put('data/branches/' + META[b], b64(branchJson(b)), 'Admin edit: ' + DATA[b].names.join(' / '), cur[b].sha); S(savedKey(b), normB(DATA[b]));}
-      }
-      function adminSave() {
-        const L = JSON.parse(LIVEJ), bs = unsentB(), ph = newPhotos(bs);
-        modal('<h3>Save changes</h3><div class="m">Saved straight to GitHub — no pull request. The live site updates in about a minute.</div>'
-          + bs.map(b => '<div class="m"><b>' + E(DATA[b].names.join(' / ')) + '</b></div>' + dlist(diff(L[b], DATA[b]))).join('')
-          + (GH.token ? '<button id="go">💾 Save now</button>' : '<div class="warn">To save directly, connect GitHub with a token that has <b>Contents: read &amp; write</b> (tap 🔗 at the top). Or save by hand:</div>' + manualHtml(bs, ph))
-          + '<div id="gm" class="warn"></div>', m => {
-            m.querySelectorAll('.cp').forEach(b => b.onclick = async () => {try {await navigator.clipboard.writeText(branchJson(+b.dataset.b)); b.textContent = 'Copied ✔';} catch (x) {b.textContent = 'Copy failed';} });
-            const go = m.querySelector('#go');
-            if (go) go.onclick = async () => {
-              go.disabled = true; go.textContent = 'Saving…';
-              try {
-                await saveDirect(bs); bs.forEach(b => {SENT[b] = hash(JSON.stringify(DATA[b]));}); setRole();
-                m.innerHTML = '<h3>✅ Saved</h3><div class="m">Your changes are in GitHub. The live site updates in about a minute — reload then.</div>'; st('Saved to GitHub — live in about a minute');
-              } catch (x) {
-                go.disabled = false; go.textContent = '💾 Save now';
-                m.querySelector('#gm').textContent = saveErr(x, String(x.message || 'error'));
-              }
-            };
-          });
-      }
-    })();
-
-  </script>
+(function(){if(window.__directSaveD1)return;window.__directSaveD1=true;const toast=t=>{let e=document.getElementById('ds-toast');if(!e){e=document.createElement('div');e.id='ds-toast';e.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99;background:#1f2937;color:white;padding:12px 18px;border-radius:12px';document.body.appendChild(e)}e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',5000)};const oldRole=setRole;setRole=function(){oldRole.apply(this,arguments);try{$('sub').textContent='💾 Save changes'}catch(e){}};$('sub').onclick=async function(){const bs=unsentB();if(!bs.length)return;const btn=$('sub');btn.disabled=true;btn.textContent='⏳ Saving…';try{const r=await fetch('/api/tree',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:META,tree:DATA})});const out=await r.json().catch(()=>({}));if(!r.ok)throw new Error(out.error||('Save failed ('+r.status+')'));LIVEJ=JSON.stringify(out.tree);DATA=JSON.parse(LIVEJ);reindex();dirtyB=[];const keep=new Set();const collectPhotos=n=>{(n.ph||[]).forEach(id=>{if(id)keep.add(id)});(n.kids||[]).forEach(collectPhotos)};DATA.forEach(collectPhotos);for(const id of UPLOADED)if(!keep.has(id))fetch(`/api/photos?id=${encodeURIComponent(id)}`,{method:"DELETE",credentials:"same-origin"}).catch(()=>{});UPLOADED.clear();bs.forEach(b=>SENT[b]=hash(JSON.stringify(DATA[b])));if(GH.user)S('draft:'+GH.user.toLowerCase(),null);render();setRole();toast('✅ Saved. Everyone will see the updates.');st('Saved to shared family database')}catch(e){modal('<h3>Could not save</h3><div class="warn">'+E(e.message||'Please try again.')+'</div><button id="retry">Try again</button>',m=>m.querySelector('#retry').onclick=()=>{$('modal').style.display='none';$('sub').onclick()})}finally{btn.disabled=false;setRole()}}})();
+</script>
 </body>
 </html>

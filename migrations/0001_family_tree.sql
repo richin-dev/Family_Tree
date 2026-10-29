@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS family_tree (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  payload TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_by TEXT NOT NULL
+);

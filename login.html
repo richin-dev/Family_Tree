@@ -34,7 +34,6 @@ button.go:disabled{opacity:.55;cursor:wait}
   <a class="back" href="./">← Back to the family tree</a>
   <div class="note">Accounts are created by the family admin — there is no sign-up. Ask them if you need access.</div>
 </main>
-<script src="pages-auth.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const goNext=()=>{const n=new URLSearchParams(location.search).get('next');location.replace(n&&!n.startsWith('//')&&!n.includes(':')?n:'./')};
@@ -46,8 +45,6 @@ $('f').onsubmit=async e=>{e.preventDefault();$('go').disabled=true;$('msg').text
   if(r.ok){goNext();return}
   if(ct.includes('application/json')&&r.status!==404){const d=await r.json().catch(()=>({}));$('msg').textContent=d.error||'Wrong username or password.';$('p').value='';$('p').focus();$('go').disabled=false;return}}
  catch(x){}
- try{if(await ftLocalLogin(username,password)){goNext();return}
-  $('msg').textContent='Wrong username or password.'}
- catch(x){$('msg').textContent='Sign-in failed.'}
+ $('msg').textContent='Sign-in is unavailable. Please try again when the server is online.';
  $('p').value='';$('p').focus();$('go').disabled=false};
 </script></body></html>

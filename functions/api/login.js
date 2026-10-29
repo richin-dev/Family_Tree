@@ -3,7 +3,7 @@ import { findUser, checkPassword, makeSession, cookie, json, secretOk } from '..
 
 const TTL = 7 * 24 * 3600, MAX_FAILS = 5, WINDOW = 900;
 
-export async function onRequestPost({ request, env }) {
+async function handlePost({ request, env }) {
   if (!secretOk(env)) return json({ error: 'Server not configured.' }, 500);
   let body; try { body = await request.json(); } catch { return json({ error: 'Bad request.' }, 400); }
   const username = String(body.username || '').trim().toLowerCase().slice(0, 64), password = String(body.password || '').slice(0, 200);
@@ -24,4 +24,7 @@ export async function onRequestPost({ request, env }) {
   const token = await makeSession(env, user.u, TTL);
   return json({ ok: true }, 200, { 'Set-Cookie': cookie(token, TTL, new URL(request.url).protocol === 'https:') });
 }
-export const onRequest = () => json({ error: 'Use POST.' }, 405);
+export async function onRequest(ctx) {
+  if (ctx.request.method === 'POST') return handlePost(ctx);
+  return json({ error: 'Use POST.' }, 405, { Allow: 'POST' });
+}
