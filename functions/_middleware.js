@@ -3,7 +3,7 @@
 //  - Signed-in family members get the full data and photos. Everything else needs a session.
 import { readSession, secretOk, json } from '../lib/auth.js';
 
-const PUBLIC_GET = [/^\/login$/, /^\/$/, /^\/index\.html$/, /^\/tree(?:\.html)?\/?$/, /^\/login\.html$/, /^\/privacy(?:\.html)?\/?$/, /^\/data\.json$/, /^\/data\.public\.json$/, /^\/favicon\.ico$/, /^\/api\/me$/, /^\/api\/tree$/];
+const PUBLIC_GET = [/^\/login$/, /^\/$/, /^\/index\.html$/, /^\/tree(?:\.html)?\/?$/, /^\/login\.html$/, /^\/privacy(?:\.html)?\/?$/, /^\/assets\/family-tree-logo\.png$/, /^\/data\.json$/, /^\/data\.public\.json$/, /^\/favicon\.ico$/, /^\/api\/me$/, /^\/api\/tree$/];
 const OPEN_ANY = new Set(['/api/login', '/api/logout', '/api/drive/callback']);
 
 export async function onRequest(ctx) {
