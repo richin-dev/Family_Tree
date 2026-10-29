@@ -22,6 +22,8 @@ button.go:disabled{opacity:.55;cursor:wait}
 #msg{min-height:20px;margin-top:12px;font-size:13px;color:#ffb07a}
 .back{display:inline-block;margin-top:14px;color:#8ec9ff;font-size:13px}
 .note{margin-top:10px;font-size:12px;opacity:.6}
+.forgot{display:inline-block;margin-top:12px;padding:4px 8px;border:0;background:none;color:#8ec9ff;font:inherit;font-size:13px;text-decoration:underline;cursor:pointer}
+.reset-note{margin-top:8px;padding:10px;border:1px solid #8b6b3d;border-radius:8px;font-size:12px;opacity:.85}
 </style></head><body>
 <main class="card">
   <h1>Family Tree</h1><p>Sign in to continue</p>
@@ -31,6 +33,8 @@ button.go:disabled{opacity:.55;cursor:wait}
     <button class="go" id="go" type="submit">Sign in</button>
     <div id="msg" role="alert" aria-live="polite"></div>
   </form>
+  <button class="forgot" type="button" id="forgot" aria-expanded="false" aria-controls="reset-note">Forgot password?</button>
+  <div class="reset-note" id="reset-note" hidden>This sign-in does not send password-reset emails. Please contact the family administrator to request a new password.</div>
   <a class="back" href="./">← Back to the family tree</a>
   <div class="note">Accounts are created by the family admin — there is no sign-up. Ask them if you need access.</div>
 </main>
@@ -38,6 +42,7 @@ button.go:disabled{opacity:.55;cursor:wait}
 const $=id=>document.getElementById(id);
 const goNext=()=>{const n=new URLSearchParams(location.search).get('next');location.replace(n&&!n.startsWith('//')&&!n.includes(':')?n:'./')};
 $('eye').onclick=()=>{const s=$('p').type==='password';$('p').type=s?'text':'password';$('eye').textContent=s?'Hide':'Show'};
+$('forgot').onclick=()=>{const panel=$('reset-note'),open=panel.hidden;panel.hidden=!open;$('forgot').setAttribute('aria-expanded',String(open))};
 $('f').onsubmit=async e=>{e.preventDefault();$('go').disabled=true;$('msg').textContent='';
  const username=$('u').value,password=$('p').value;
  try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({username,password})});
