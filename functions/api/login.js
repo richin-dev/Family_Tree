@@ -1,5 +1,6 @@
 // POST {username, password}. There is deliberately NO sign-up route: accounts exist only if the admin put them in AUTH_USERS.
 import { findUser, checkPassword, makeSession, cookie, json, secretOk } from '../../lib/auth.js';
+import { isAdminUser } from '../../lib/access.js';
 
 const TTL = 7 * 24 * 3600, MAX_FAILS = 5, WINDOW = 900;
 
@@ -22,7 +23,14 @@ async function handlePost({ request, env }) {
   }
   if (kv) await kv.delete(key);
   const token = await makeSession(env, user.u, TTL);
-  return json({ ok: true }, 200, { 'Set-Cookie': cookie(token, TTL, new URL(request.url).protocol === 'https:') });
+  let connectDrive = false;
+  if (await isAdminUser({ request, env }, user) && env.FAMILY_DB && env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
+    try {
+      const connected = await env.FAMILY_DB.prepare('SELECT id FROM google_drive_settings WHERE id=1').first();
+      connectDrive = !connected;
+    } catch { /* Keep sign-in available if the Drive migration is not ready. */ }
+  }
+  return json({ ok: true, connectDrive }, 200, { 'Set-Cookie': cookie(token, TTL, new URL(request.url).protocol === 'https:') });
 }
 export async function onRequest(ctx) {
   if (ctx.request.method === 'POST') return handlePost(ctx);

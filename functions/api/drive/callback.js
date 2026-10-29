@@ -41,5 +41,10 @@ export async function onRequestGet(ctx) {
   if (!token.refresh_token) return result('Google did not return a refresh token. Reconnect and approve offline access.', 502, secure);
   try { await saveDriveRefreshToken(ctx, token.refresh_token); }
   catch { return result('The Google account was authorized, but its connection could not be saved. Check the D1 migration.', 503, secure); }
-  return result('Google Drive is connected. You can close this page.', 200, secure);
+  return new Response('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Drive connected</title><body style="font:16px system-ui;max-width:520px;margin:15vh auto;padding:24px;color:#222"><h1>Google Drive is connected</h1><p>Family Tree photo storage is ready.</p><p><a href="/">Return to Family Tree</a></p></body></html>', {status:200, headers:{
+    'Content-Type':'text/html; charset=utf-8',
+    'Cache-Control':'no-store',
+    'X-Content-Type-Options':'nosniff',
+    'Set-Cookie':`ft_drive_state=; Path=/api/drive/callback; Max-Age=0; HttpOnly; SameSite=Lax${secure ? '; Secure' : ''}`
+  }});
 }

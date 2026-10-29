@@ -42,7 +42,7 @@ $('f').onsubmit=async e=>{e.preventDefault();$('go').disabled=true;$('msg').text
  const username=$('u').value,password=$('p').value;
  try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({username,password})});
   const ct=r.headers.get('content-type')||'';
-  if(r.ok){goNext();return}
+  if(r.ok){const data=await r.json().catch(()=>({}));if(data.connectDrive){location.replace('/api/drive/connect');return}goNext();return}
   if(ct.includes('application/json')&&r.status!==404){const d=await r.json().catch(()=>({}));$('msg').textContent=d.error||'Wrong username or password.';$('p').value='';$('p').focus();$('go').disabled=false;return}}
  catch(x){}
  $('msg').textContent='Sign-in is unavailable. Please try again when the server is online.';

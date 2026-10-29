@@ -36,11 +36,11 @@ The editor accepts JPEG, PNG, or WebP images up to 10 MB, resizes them, and send
    Keep the existing `SESSION_SECRET` and `AUTH_USERS` secrets. Never put credentials in build-time variables or source files.
 
 4. Deploy the project after the migration and variables are ready.
-5. Sign in to the site as the family admin, then open:
+5. Sign in to the site as the family admin. If Drive is not connected yet, sign-in sends the admin to Google authorization automatically. To reconnect later, open:
 
    `https://family-tree-private-4yd.pages.dev/api/drive/connect`
 
-   Choose the Google account that should own the photos and approve access. The site requests offline access with the `drive.file` scope. The refresh token is encrypted and stored in D1; it is never shown in the browser.
+   Choose the Google account that should own the photos and approve access. The site requests offline access with the `drive.file` scope. The refresh token is encrypted and stored in D1; it is never shown in the browser. After authorization, use the **Return to Family Tree** link.
 6. The first upload creates a private **Family Tree Photos** folder in that Drive. Do not enable public link sharing for the folder or its files.
 
 Google recommends offline OAuth access for server apps that must reach Drive when the user is not present. See [Google's web-server OAuth guide](https://developers.google.com/identity/protocols/oauth2/web-server). If the OAuth app remains in **Testing**, Google refresh tokens expire after seven days; move it to **In production** before relying on persistent uploads. See [Google's refresh-token guidance](https://developers.google.com/identity/protocols/oauth2#expiration).
