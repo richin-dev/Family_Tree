@@ -18,7 +18,7 @@ fs.rmSync('dist', { recursive: true, force: true });
 fs.mkdirSync('dist/photos', { recursive: true });
 fs.writeFileSync('dist/data.json', JSON.stringify({ files: meta.files, tree }));
 // What anonymous visitors get: the same tree without phone numbers, addresses and blood groups.
-const strip = ({ tel, addr, bg, ...r }) => ({ ...r, kids: (r.kids || []).map(strip), spouseBranches: (r.spouseBranches || []).map(branch => ({ ...branch, kids: (branch.kids || []).map(strip) })) });
+const strip = ({ tel, addr, bg, ...r }) => ({ ...r, kids: (r.kids || []).map(strip) });
 fs.writeFileSync('dist/data.public.json', JSON.stringify({ files: meta.files, tree: tree.map(strip) }));
 const uploads = access.uploads === 'family' ? 'family' : 'admin';
 fs.writeFileSync('dist/access.json', JSON.stringify({ repo: access.repo, admin: access.admin, uploads, users: access.users }));

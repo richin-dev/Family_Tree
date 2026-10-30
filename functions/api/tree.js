@@ -1,6 +1,5 @@
 import { readSession, json, secretOk } from '../../lib/auth.js';
 import { deleteDrivePhoto, findDrivePhoto } from '../../lib/google-drive.js';
-import { checkBranch } from '../../scripts/schema.mjs';
 
 async function sessionUser(request, env) {
   if (!secretOk(env)) return null;
@@ -20,7 +19,6 @@ function photoState(tree) {
       n.ph.forEach(id => { if (id) ids.add(id); });
     }
     if (Array.isArray(n.kids)) n.kids.forEach(walk);
-    if (Array.isArray(n.spouseBranches)) n.spouseBranches.forEach(branch => { if (Array.isArray(branch.kids)) branch.kids.forEach(walk); });
   };
   if (!Array.isArray(tree)) throw new Error('Invalid family tree.');
   tree.forEach(walk);
@@ -28,7 +26,7 @@ function photoState(tree) {
 }
 async function handleGet(ctx) {
   const user = await sessionUser(ctx.request, ctx.env);
-  if (!user) { if(ctx.env.FAMILY_DB){const row=await ctx.env.FAMILY_DB.prepare('SELECT payload FROM family_tree WHERE id=1').first();if(row){try{const d=JSON.parse(row.payload),strip=n=>{const {tel,addr,bg,...rest}=n;return {...rest,kids:(n.kids||[]).map(strip),spouseBranches:(n.spouseBranches||[]).map(branch=>({...branch,kids:(branch.kids||[]).map(strip)}))}};return json({...d,tree:d.tree.map(strip)});}catch{}}} const r=await ctx.env.ASSETS.fetch(new Request(new URL('/data.public.json',ctx.request.url))); return r.ok?new Response(r.body,r):json({error:'Public tree unavailable.'},500); }
+  if (!user) { if(ctx.env.FAMILY_DB){const row=await ctx.env.FAMILY_DB.prepare('SELECT payload FROM family_tree WHERE id=1').first();if(row){try{const d=JSON.parse(row.payload),strip=n=>{const {tel,addr,bg,...rest}=n;return {...rest,kids:(n.kids||[]).map(strip)}};return json({...d,tree:d.tree.map(strip)});}catch{}}} const r=await ctx.env.ASSETS.fetch(new Request(new URL('/data.public.json',ctx.request.url))); return r.ok?new Response(r.body,r):json({error:'Public tree unavailable.'},500); }
   if (!ctx.env.FAMILY_DB) return json({error:'Database is not configured. Follow SETUP-DIRECT-SAVE.md.'},503);
   let row = await ctx.env.FAMILY_DB.prepare('SELECT payload FROM family_tree WHERE id=1').first();
   if (!row) {
@@ -45,9 +43,6 @@ async function handlePut(ctx) {
   if (!ctx.env.FAMILY_DB) return json({error:'Database is not configured. Follow SETUP-DIRECT-SAVE.md.'},503);
   let body; try { body=await ctx.request.json(); } catch { return json({error:'Invalid JSON.'},400); }
   if (!Array.isArray(body.tree) || !Array.isArray(body.files) || body.tree.length !== body.files.length || body.tree.length > 30) return json({error:'Invalid family tree payload.'},400);
-  const treeErrors=[], treeIds=new Set();
-  body.tree.forEach((root,i)=>checkBranch(root,body.files[i],treeErrors,treeIds));
-  if(treeErrors.length)return json({error:'Invalid family tree data.',details:treeErrors.slice(0,20)},400);
   const accessRes=await ctx.env.ASSETS.fetch(new Request(new URL('/access.json',ctx.request.url)));
   let access={}; try{access=await accessRes.json()}catch{}
   const gh=String(user.github||'').toLowerCase(), admin=String(ctx.env.FAMILY_ADMIN||access.admin||'').toLowerCase();
@@ -71,18 +66,15 @@ async function handlePut(ctx) {
       if (!stored) return json({error:'A selected photo is not available in Google Drive.'},400);
     }
   }
-  const filesAreSameSet=body.files.length===current.files.length&&new Set(body.files).size===current.files.length&&body.files.every(f=>current.files.includes(f));
-  if(!filesAreSameSet)return json({error:'The family branch list is invalid.'},400);
-  const orderChanged=body.files.some((f,i)=>f!==current.files[i]);
-  if(orderChanged&&gh!==admin)return json({error:'Only the family admin can reorder the top-level families.'},403);
-  const allowedSet=new Set(gh===admin?body.files:allowed),oldByFile=new Map(current.files.map((file,i)=>[file,current.tree[i]]));
-  let nextTree; try { nextTree=body.tree.map((incoming,i)=>{
-    const file=body.files[i],old=oldByFile.get(file); if(!old||!incoming||incoming.id!==old.id) throw new Error('Branch identity mismatch.');
+  const allowedSet=new Set(gh===admin?body.files:allowed);
+  if(body.files.some((f,i)=>f!==current.files[i]) || body.files.length!==current.files.length) return json({error:'Branch list cannot be changed here.'},400);
+  let nextTree; try { nextTree=current.tree.map((old,i)=>{
+    const incoming=body.tree[i]; if(!incoming || incoming.id!==old.id) throw new Error('Branch identity mismatch.');
     const changed=JSON.stringify(incoming)!==JSON.stringify(old);
-    if(changed&&!allowedSet.has(file)) throw new Error('You cannot edit one or more family branches.');
+    if(changed && !allowedSet.has(current.files[i])) throw new Error('You cannot edit one or more family branches.');
     return changed?incoming:old;
   }); } catch(e) { return json({error:e.message||'Invalid branch data.'},403); }
-  const next={files:body.files,tree:nextTree};
+  const next={files:current.files,tree:nextTree};
   await ctx.env.FAMILY_DB.prepare('INSERT INTO family_tree(id,payload,updated_by) VALUES(1,?,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,updated_at=CURRENT_TIMESTAMP,updated_by=excluded.updated_by').bind(JSON.stringify(next),user.u).run();
   if (photoChanged) for (const id of beforePhotos.ids) if (!afterPhotos.ids.has(id)) {
     try { await deleteDrivePhoto(ctx,id); }
