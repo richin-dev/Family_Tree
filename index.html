@@ -118,10 +118,6 @@
     .menu-panel summary:hover { background: rgba(184,137,63,.2) }
     .menu-panel .leg { display: grid; gap: 3px; padding: 3px 5px 5px }
     .menu-panel .leg span { white-space: normal; border: 0; border-radius: 4px; background: rgba(184,137,63,.1); padding: 5px 8px; font-size: 11px }
-    .spouse-tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; padding: 0 10px 8px; position: relative; z-index: 2 }
-    .spouse-tabs[hidden] { display: none }
-    .spouse-tabs button { padding: 5px 10px; border: 1px solid rgba(184,137,63,.75); border-radius: 99px; background: rgba(16,13,9,.92); color: #f0d9a0; cursor: pointer; font: 600 11px var(--ff) }
-    .spouse-tabs button.active { background: linear-gradient(#b8893f, #7c5619); border-color: #f0d9a0; color: #fff }
     .search-box { justify-self: center; display: flex; align-items: center; gap: 8px; width: min(360px, 100%); padding: 0 10px; border: 1px solid var(--bd); border-radius: 8px; background: #120e09; color: #d9a441 }
     .search-box:focus-within { border-color: #f0d9a0; box-shadow: 0 0 0 2px rgba(184,137,63,.2) }
     .search-box svg { flex: none; width: 18px; height: 18px; stroke: currentColor }
@@ -241,9 +237,6 @@
 
     #banners .plate .root-edit { display: block; margin: 6px auto 0; padding: 3px 8px; border: 1px solid rgba(240,217,160,.55); border-radius: 6px; background: rgba(12,13,17,.72); color: #f0d9a0; font: 600 10px var(--ff); cursor: pointer }
     #banners .plate .root-edit:hover { background: linear-gradient(#b8893f, #7c5619); color: #fff }
-    #banners .root-order-controls { display: inline-flex; gap: 5px; margin-top: 6px }
-    #banners .root-order-controls button { min-width: 30px; padding: 3px 7px; border: 1px solid rgba(240,217,160,.48); border-radius: 5px; background: rgba(12,13,17,.72); color: #f0d9a0; cursor: pointer }
-    #banners .root-order-controls button:disabled { opacity: .35; cursor: default }
 
     .pi {
       display: block;
@@ -1874,7 +1867,7 @@
   </div></div><label class="search-box" aria-label="Search family members"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5 5 5h4l1.5 6.5M21 8.5 19 5h-4l-1.5 6.5M9.5 11.5h5"/><circle cx="6.5" cy="15" r="4"/><circle cx="17.5" cy="15" r="4"/></svg><input id="q" type="search" placeholder="Search a name…"></label><div class="auth-corner"><button id="in" class="auth-in" style="display:none"><span class="admin-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4Zm0 2c-4.6 0-8 2.4-8 5.5V22h16v-2.5c0-3.1-3.4-5.5-8-5.5Z"/></svg></span><span>Sign in</span></button><button id="out" class="auth-out" style="display:none"><span class="admin-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4Zm0 2c-4.6 0-8 2.4-8 5.5V22h16v-2.5c0-3.1-3.4-5.5-8-5.5Z"/></svg></span><span>Sign out</span></button><button id="sub" style="display:none">💾 Save changes</button></div><span class="st" id="st"></span></div>
   <div id="loose"></div>
   <div class="wrap" id="wrap">
-    <div id="banners"></div><div id="spouse-tabs" class="spouse-tabs" hidden></div><i id="dv"></i><i id="dh"></i>
+    <div id="banners"></div><i id="dv"></i><i id="dh"></i>
     <div id="tree"></div>
   </div>
   <div class="side" id="side"></div>
@@ -1893,9 +1886,9 @@
     const S = (k, v) => {try {if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v)} catch (e) {return null} };
     const E = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
     const PH = {}, NEWPH = {}, UPLOADED = new Set();
-    let role = 'viewer', BR = [], dirtyB = [], SENT = {}, ACCESS = null, META = [], LIVEFILES = [], GH = {user: S('gh:user') || '', token: S('gh:token') || ''}, LIVEJ = '[]', loaded = false, undoStack = [], undoState = '', LOOSE = [];
-    const historyState = () => JSON.stringify({tree: DATA, files: META, loose: LOOSE, current: cur, spouse: currentSpouse});
-    let cur = 0, currentSpouse = 0, sel = null, ed = false, P = new Map(), open = new Set(), hits = new Set(), lastJ = '', tm = null;
+    let role = 'viewer', BR = [], dirtyB = [], SENT = {}, ACCESS = null, META = [], GH = {user: S('gh:user') || '', token: S('gh:token') || ''}, LIVEJ = '[]', loaded = false, undoStack = [], undoState = '', LOOSE = [];
+    const historyState = () => JSON.stringify({tree: DATA, loose: LOOSE, current: cur});
+    let cur = 0, sel = null, ed = false, P = new Map(), open = new Set(), hits = new Set(), lastJ = '', tm = null;
     $('leg').innerHTML = Object.values(GEN).map(g => '<span><b style="background:' + g[2] + '"></b>' + g[0] + ' = ' + g[1] + '</span>').join('') + '<span>✝ Grey name = passed away</span><span><b style="background:#000;color:#777"></b>Black slot = couple both passed away</span>';
     const dead = (n, i) => typeof (n.dd || [])[i] === 'string';
     const BGO = ['', 'A+', 'A−', 'B+', 'B−', 'AB+', 'AB−', 'O+', 'O−'];
@@ -1944,8 +1937,7 @@
         img.src = previewUrl;
       }; f.click()
     }
-    function unionKids(root, spouseIndex = 0) {return spouseIndex > 0 && root.spouseBranches && root.spouseBranches[spouseIndex - 1] ? root.spouseBranches[spouseIndex - 1].kids : root.kids}
-    function reindex() {P = new Map(); DATA.forEach(r => {const walk=(n,p,union=0)=>{P.set(n.id,{n,p,union});n.kids.forEach(k=>walk(k,n,union))};walk(r,null,0);(r.spouseBranches||[]).forEach((u,i)=>u.kids.forEach(k=>walk(k,{id:r.id,kids:u.kids},i+1)))})}
+    function reindex() {P = new Map(); DATA.forEach(r => (function f(n, p) {P.set(n.id, {n, p}); n.kids.forEach(k => f(k, n))})(r, null))}
     const cnt = n => n.kids.reduce((a, k) => a + 1 + cnt(k), 0);
     function path(id) {const a = []; let e = P.get(id); while (e && e.p) {e = P.get(e.p.id); if (e && e.n.names.length && e.p) a.unshift(e.n.names[0])} return a}
     function reorderSibling(n,delta) {const entry=P.get(n.id);if(!entry||!entry.p||!canEditNode(n))return;const siblings=entry.p.kids,from=siblings.indexOf(n),to=from+delta;if(from<0||to<0||to>=siblings.length)return;[siblings[from],siblings[to]]=[siblings[to],siblings[from]];save();render();show(n);st('Sibling order updated')}
@@ -2010,30 +2002,19 @@
     }
     let ET = null, STEP = 40;
     function render() {
-      $('pop').style.display = 'none'; const w = $('wrap'), sx = w.scrollLeft, sy = window.scrollY; banners(); renderSpouseTabs(); renderLoose(); const t = $('tree'); t.innerHTML = ''; IDX = 0; if (!DATA.length) {t.innerHTML = '<div class="m" style="padding:30px 6px">Loading the family tree…</div>'; return } const r = DATA[cur];
-      const h = document.createElement('div'); h.className = 'kids top'; h.style.margin = '0'; unionKids(r,currentSpouse).forEach(x => h.appendChild(node(x, true))); t.appendChild(h);
+      $('pop').style.display = 'none'; const w = $('wrap'), sx = w.scrollLeft, sy = window.scrollY; banners(); renderLoose(); const t = $('tree'); t.innerHTML = ''; IDX = 0; if (!DATA.length) {t.innerHTML = '<div class="m" style="padding:30px 6px">Loading the family tree…</div>'; return } const r = DATA[cur];
+      const h = document.createElement('div'); h.className = 'kids top'; h.style.margin = '0'; r.kids.forEach(x => h.appendChild(node(x, true))); t.appendChild(h);
       STEP = Math.max(14, Math.min(60, 2400 / Math.max(IDX, 1))); t.style.setProperty('--st', STEP + 'ms'); w.scrollLeft = sx; window.scrollTo(window.scrollX, sy); place()
-    }
-    function renderSpouseTabs() {
-      const host=$('spouse-tabs'),root=DATA[cur],spouses=root&&root.spouseBranches||[];
-      if(!host)return;
-      if(!spouses.length){host.hidden=true;host.innerHTML='';currentSpouse=0;return}
-      currentSpouse=Math.max(0,Math.min(currentSpouse,spouses.length));host.hidden=false;
-      const labels=[[root.names[0],root.names[1]||'Spouse 1'].join(' + '),...spouses.map(s=>[root.names[0],s.name||'Spouse'].join(' + '))];
-      host.innerHTML=labels.map((name,i)=>'<button type="button" data-spouse="'+i+'" class="'+(i===currentSpouse?'active':'')+'">'+E(name)+'</button>').join('');
-      host.querySelectorAll('[data-spouse]').forEach(button=>button.onclick=()=>{currentSpouse=+button.dataset.spouse;hide();render();st('Showing the children branch for '+labels[currentSpouse])})
     }
     function banners() {
       const b = $('banners'); b.innerHTML = ''; DATA.forEach((r, i) => {
         const p = document.createElement('div'); p.className = 'plate' + (i === cur ? ' on' : '');
-        p.innerHTML = '<div class="p1">' + E(r.names[0]) + '</div><div class="p2">' + E(r.names[1] || '') + '</div>' + (ed && canEditNode(r) ? '<button class="root-edit" type="button">✎ Edit family</button>' : '') + (ed && role === 'admin' ? '<span class="root-order-controls"><button type="button" data-root-move="'+i+'" data-delta="-1" aria-label="Move family up" title="Move up"'+(i===0?' disabled':'')+'>↑</button><button type="button" data-root-move="'+i+'" data-delta="1" aria-label="Move family down" title="Move down"'+(i===DATA.length-1?' disabled':'')+'>↓</button></span>' : '');
-        const edit = p.querySelector('.root-edit'); if (edit) edit.onclick = ev => {ev.stopPropagation(); if (i !== cur) {cur = i;currentSpouse=0} render(); show(r)};
-        p.querySelectorAll('[data-root-move]').forEach(button=>button.onclick=ev=>{ev.stopPropagation();reorderRoot(+button.dataset.rootMove,+button.dataset.delta)});
-        if (i !== cur) {p.title = 'Open this branch'; p.onclick = () => {cur = i; currentSpouse=0; render(); hide(); window.warp && warp(); enter(); const on = document.querySelector('#banners .plate.on'); on && on.scrollIntoView({inline: 'center', block: 'nearest'}); place()}}
+        p.innerHTML = '<div class="p1">' + E(r.names[0]) + '</div><div class="p2">' + E(r.names[1] || '') + '</div>' + (ed && canEditNode(r) ? '<button class="root-edit" type="button">✎ Edit family</button>' : '');
+        const edit = p.querySelector('.root-edit'); if (edit) edit.onclick = ev => {ev.stopPropagation(); if (i !== cur) cur = i; render(); show(r)};
+        if (i !== cur) {p.title = 'Open this branch'; p.onclick = () => {cur = i; render(); hide(); window.warp && warp(); enter(); const on = document.querySelector('#banners .plate.on'); on && on.scrollIntoView({inline: 'center', block: 'nearest'}); place()}}
         b.appendChild(p)
       })
     }
-    function reorderRoot(index,delta) {if(role!=='admin'||!ed)return;const to=index+delta;if(index<0||to<0||to>=DATA.length)return;const active=DATA[cur]&&DATA[cur].id;[DATA[index],DATA[to]]=[DATA[to],DATA[index]];[META[index],META[to]]=[META[to],META[index]];cur=DATA.findIndex(r=>r.id===active);save();render();setRole();st('Top-level family order changed. Save changes to publish the new order.')}
     function place() {
       const w = $('wrap'), p = document.querySelector('#banners .plate.on'); if (!p) return; const wr = w.getBoundingClientRect(), pr = p.getBoundingClientRect(), tr = $('tree').getBoundingClientRect();
       const cx = pr.left + pr.width / 2 - wr.left + w.scrollLeft - 1.5, pb = pr.bottom - wr.top + w.scrollTop, tt = tr.top - wr.top + w.scrollTop, tl = tr.left - wr.left + w.scrollLeft, dv = $('dv'), dh = $('dh');
@@ -2048,7 +2029,7 @@
       if (v.length >= 2) {
         let first = null; P.forEach(({n}, id) => {if (n.names.join(' ').toUpperCase().includes(v)) {hits.add(id); if (first === null) first = id} });
         hits.forEach(id => {let e = P.get(id); while (e && e.p) {open.add(e.p.id); e = P.get(e.p.id)} });
-        if (first) {let e=P.get(first);currentSpouse=e.union||0;while(e.p)e=P.get(e.p.id);cur=DATA.indexOf(e.n)}
+        if (first) {let e = P.get(first); while (e.p) e = P.get(e.p.id); cur = DATA.indexOf(e.n)}
       }
       render(); const h = document.querySelector('.c.hit'); h && h.scrollIntoView({block: 'center', inline: 'center'})
     };
@@ -2064,10 +2045,8 @@
       else {
         const spouseButton = rootNode ? '' : '<button id="an">+ Spouse / name line</button>';
         const categoryField = rootNode ? '' : '<div class="m">Category</div><select id="cat">' + Object.keys(GEN).map(k => '<option value="' + k + '"' + (k === n.c ? ' selected' : '') + '>' + GEN[k][0] + ' — ' + GEN[k][1] + '</option>').join('') + '</select>';
-        const spouseBranches=n.spouseBranches||[],canAddSpouse=n.names.length<2||spouseBranches.length<1;
-        const rootSpouseFields=rootNode?'<div class="m">Spouse branches. Each spouse has a separate children branch.</div>'+spouseBranches.map((sp,i)=>'<div class="pp"><div class="m">Spouse '+(i+2)+' · '+(sp.kids||[]).length+' children</div><input class="root-spouse-name" data-i="'+i+'" value="'+E(sp.name||'')+'" aria-label="Spouse '+(i+2)+' name"><div class="r"><button class="open-spouse-branch" data-i="'+(i+1)+'">Open children branch</button><button class="remove-spouse-branch dn" data-i="'+i+'">Remove spouse branch</button></div></div>').join('')+'<button id="add-spouse-branch"'+(canAddSpouse?'':' disabled')+'>'+(n.names.length<2?'+ Add spouse':'+ Add second spouse branch')+'</button>':'';
-        h += '<h3>' + (rootNode ? 'Edit main family' : 'Edit member') + '</h3>' + n.names.map((x, i) => '<div class="pp"><div class="r"><input class="nm" data-i="' + i + '" value="' + E(x) + '" placeholder="' + (i ? 'Spouse / partner' : 'Name') + '"><select class="bgs" data-i="' + i + '" title="Blood group">' + BGO.map(g => '<option value="' + g + '"' + (g === ((n.bg || [])[i] || '') ? ' selected' : '') + '>' + (g ? '🩸 ' + g : '🩸 —') + '</option>').join('') + '</select>' + (n.names.length > 1 && !rootNode ? '<button data-rm="' + i + '">×</button>' : '') + '</div><div class="r"><label class="ck"><input type="checkbox" class="dc" data-i="' + i + '"' + (dead(n, i) ? ' checked' : '') + '> ✝ Passed away</label><input class="dt" data-i="' + i + '" placeholder="Year or date" value="' + E(dead(n, i) ? (n.dd[i] || '') : '') + '"' + (dead(n, i) ? '' : ' disabled') + '></div>' + (canManagePhotos() ? '<div class="r"><button class="up" data-i="' + i + '">📷 ' + ((n.ph || [])[i] ? 'Change' : 'Add') + ' photo</button>' + ((n.ph || [])[i] ? '<button class="rp" data-i="' + i + '">Remove</button><img class="th" alt="" data-pid="' + n.ph[i] + '">' : '') + '</div>' : ((n.ph || [])[i] ? '<img class="th" alt="" data-pid="' + n.ph[i] + '">' : '')) + '</div>').join('')
-        + spouseButton + categoryField + rootSpouseFields + '<div class="m">Link</div><input id="lk" value="' + E(n.link || '') + '" placeholder="https://… (photo, profile, document)"><div class="m">📞 Phone number</div><input id="tel" type="tel" value="' + E(n.tel || '') + '" placeholder="+91 …"><div class="m">📍 Address</div><textarea id="addr" rows="2" placeholder="House, street, town">' + E(n.addr || '') + '</textarea><div class="r"><button id="ac">+ Add child to ' + E(n.names[0]) + (currentSpouse>0&&n.spouseBranches&&n.spouseBranches[currentSpouse-1]?' + '+E(n.spouseBranches[currentSpouse-1].name):' + '+E(n.names[1]||'main family')) + '</button>' + (rootNode ? '' : '<button id="dl" class="dn">Delete</button>') + '</div>'
+        h += '<h3>' + (rootNode ? 'Edit main family' : 'Edit member') + '</h3>' + n.names.map((x, i) => '<div class="pp"><div class="r"><input class="nm" data-i="' + i + '" value="' + E(x) + '" placeholder="' + (i ? 'Spouse / partner' : 'Name') + '"><select class="bgs" data-i="' + i + '" title="Blood group">' + BGO.map(g => '<option value="' + g + '"' + (g === ((n.bg || [])[i] || '') ? ' selected' : '') + '>' + (g ? '🩸 ' + g : '🩸 —') + '</option>').join('') + '</select>' + (n.names.length > 1 ? '<button data-rm="' + i + '">×</button>' : '') + '</div><div class="r"><label class="ck"><input type="checkbox" class="dc" data-i="' + i + '"' + (dead(n, i) ? ' checked' : '') + '> ✝ Passed away</label><input class="dt" data-i="' + i + '" placeholder="Year or date" value="' + E(dead(n, i) ? (n.dd[i] || '') : '') + '"' + (dead(n, i) ? '' : ' disabled') + '></div>' + (canManagePhotos() ? '<div class="r"><button class="up" data-i="' + i + '">📷 ' + ((n.ph || [])[i] ? 'Change' : 'Add') + ' photo</button>' + ((n.ph || [])[i] ? '<button class="rp" data-i="' + i + '">Remove</button><img class="th" alt="" data-pid="' + n.ph[i] + '">' : '') + '</div>' : ((n.ph || [])[i] ? '<img class="th" alt="" data-pid="' + n.ph[i] + '">' : '')) + '</div>').join('')
+        + spouseButton + categoryField + '<div class="m">Link</div><input id="lk" value="' + E(n.link || '') + '" placeholder="https://… (photo, profile, document)"><div class="m">📞 Phone number</div><input id="tel" type="tel" value="' + E(n.tel || '') + '" placeholder="+91 …"><div class="m">📍 Address</div><textarea id="addr" rows="2" placeholder="House, street, town">' + E(n.addr || '') + '</textarea><div class="r"><button id="ac">+ Add child</button>' + (rootNode ? '' : '<button id="dl" class="dn">Delete</button>') + '</div>'
       }
       s.innerHTML = h; s.style.display = 'block';
       if (NOCONTACT) s.querySelectorAll('#tel,#addr,.bgs').forEach(e => {const p = e.previousElementSibling; e.style.display = 'none'; if (p && p.classList.contains('m')) p.style.display = 'none'});
@@ -2082,12 +2061,8 @@
       s.querySelectorAll('img.th').forEach(im => getPh(im.dataset.pid).then(u => {if (u) im.src = u}));
       const spouseAdd = $('an'); if (spouseAdd) spouseAdd.onclick = () => {n.names.push('NEW NAME'); ch(n)};
       const category = $('cat'); if (category) category.onchange = ev => {n.c = ev.target.value; ch(n)};
-      s.querySelectorAll('.root-spouse-name').forEach(input=>input.onchange=()=>{n.spouseBranches[+input.dataset.i].name=input.value.trim()||'NEW SPOUSE';save();render();show(n)});
-      const addRootSpouse=$('add-spouse-branch'); if(addRootSpouse)addRootSpouse.onclick=()=>{if(n.names.length<2)n.names.push('NEW SPOUSE');else if((n.spouseBranches||[]).length<1){n.spouseBranches=n.spouseBranches||[];n.spouseBranches.push({name:'NEW SPOUSE',kids:[]});currentSpouse=1}else return;ch(n)};
-      s.querySelectorAll('.open-spouse-branch').forEach(button=>button.onclick=()=>{currentSpouse=+button.dataset.i;render();show(n)});
-      s.querySelectorAll('.remove-spouse-branch').forEach(button=>button.onclick=()=>{if(button.dataset.confirm!=='1'){button.dataset.confirm='1';button.textContent='Tap again to remove branch';return}n.spouseBranches.splice(+button.dataset.i,1);currentSpouse=0;ch(n);st('Spouse branch removed. Use Undo to restore it if needed.')});
       $('lk').onchange = ev => {n.link = ev.target.value.trim(); ch(n)}; $('tel').onchange = ev => {n.tel = ev.target.value.trim(); ch(n)}; $('addr').onchange = ev => {n.addr = ev.target.value.trim(); ch(n)};
-      $('ac').onclick = () => {const k = mk(['NEW PERSON'], RK[Math.min(generationIndex(n) + 1, RK.length - 1)]); unionKids(n,currentSpouse).push(k); open.add(n.id); reindex(); save(); render(); show(k); const i = document.querySelector('.nm'); i && i.select()};
+      $('ac').onclick = () => {const k = mk(['NEW PERSON'], RK[Math.min(generationIndex(n) + 1, RK.length - 1)]); n.kids.push(k); open.add(n.id); reindex(); save(); render(); show(k); const i = document.querySelector('.nm'); i && i.select()};
       const del = $('dl'); if (del) del.onclick = function () {if (this.dataset.s !== '1') {this.dataset.s = '1'; this.textContent = 'Tap again to confirm'; return } const pe = P.get(n.id); pe.p.kids.splice(pe.p.kids.indexOf(n), 1); sel = null; reindex(); save(); render(); hide()}
     }
     let hov = null; const pop = $('pop');
@@ -2099,7 +2074,7 @@
     $('tree').addEventListener('mouseout', e => {const c = e.target.closest('.c'); if (c && !c.contains(e.relatedTarget)) {hov = null; pop.style.display = 'none'} });
     function hide() {$('side').style.display = 'none'}
     $('ed').onclick = () => {if (!ME && !PUBLIC) {location.href = 'login.html?next=tree.html'; return } if (role === 'viewer') {ghDialog(); return } ed = !ed; $('ed').classList.toggle('on', ed); document.querySelectorAll('.edo').forEach(e => e.style.display = ed ? '' : 'none'); render(); setRole(); st(ed ? 'Your changes become a pull request that the admin reviews' : ''); if (sel && $('side').style.display === 'block') show(sel)};
-    $('ab').onclick = () => {if (!mine(cur)) {st('You can add only to your assigned branches'); return } const k = mk(['NEW PERSON'], 'blue'); unionKids(DATA[cur],currentSpouse).push(k); reindex(); save(); render(); show(k); const i = document.querySelector('.nm'); i && i.select()};
+    $('ab').onclick = () => {if (!mine(cur)) {st('You can add only to your assigned branches'); return } const k = mk(['NEW PERSON'], 'blue'); DATA[cur].kids.push(k); reindex(); save(); render(); show(k); const i = document.querySelector('.nm'); i && i.select()};
     $('loose-add').onclick = () => {if(!mine(cur)){st('You can add slots only in branches assigned to you');return}LOOSE.push({branch:cur,node:mk(['NEW PERSON'],'blue')});save();renderLoose();setRole();st('Name the floating slot, then drag it onto the parent it belongs under')};
     reindex(); DATA.forEach(r => r.kids.forEach(k => open.add(k.id)));
     (function () {
@@ -2145,9 +2120,9 @@
     const REPO = () => {const r = (ACCESS && ACCESS.repo) || ''; return /^[\w.-]+\/[\w.-]+$/.test(r) && !r.startsWith('YOUR_') ? r : ''};
     function icons(n) {const a = ((n.link || LINKS[n.names[0]]) ? '🔗' : '') + ((n.ph || []).some(Boolean) ? '📷' : '') + (n.tel ? '📞' : '') + (n.addr ? '📍' : ''); return a ? '<i>' + a + '</i>' : ''}
     function contact(n) {return (n.tel ? '<div class="m">📞 <a href="tel:' + E(String(n.tel).replace(/[^\d+]/g, '')) + '">' + E(n.tel) + '</a></div>' : '') + (n.addr ? '<div class="m">📍 ' + E(n.addr) + ' · <a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(n.addr) + '">Map</a></div>' : '')}
-    function flat(root) {const m=new Map(),walk=(n,pn)=>{(n.kids||[]).forEach(k=>{m.set(k.id,{n:k,p:pn});walk(k,k)})};walk(root,root);(root.spouseBranches||[]).forEach(sp=>(sp.kids||[]).forEach(k=>{m.set(k.id,{n:k,p:{names:[root.names[0],sp.name]}});walk(k,k)}));return m}
+    function flat(root) {const m = new Map(); (function f(n, pn) {n.kids.forEach(k => {m.set(k.id, {n: k, p: pn}); f(k, k)})})(root, root); return m}
     const lab = n => n.names.join(' & ');
-    function orderMap(root) {const m=new Map();(function walk(n){m.set(n.id,{ids:n.kids.map(k=>k.id),name:lab(n)});n.kids.forEach(walk)})(root);(root.spouseBranches||[]).forEach((sp,i)=>{const id=root.id+':spouse:'+i;m.set(id,{ids:(sp.kids||[]).map(k=>k.id),name:root.names[0]+' & '+sp.name});(sp.kids||[]).forEach(k=>{(function walk(n){m.set(n.id,{ids:n.kids.map(x=>x.id),name:lab(n)});n.kids.forEach(walk)})(k)})});return m}
+    function orderMap(root) {const m=new Map();(function walk(n){m.set(n.id,{ids:n.kids.map(k=>k.id),name:lab(n)});n.kids.forEach(walk)})(root);return m}
     function diff(a, b) {
       const A=flat(a),B=flat(b),OA=orderMap(a),OB=orderMap(b),o=[];
       B.forEach(({n,p},id)=>{const x=A.get(id);if(!x)o.push('➕ '+lab(n)+'  (under '+lab(p)+')');else{const y=x.n;if(lab(y)!==lab(n))o.push('✏️ '+lab(y)+' → '+lab(n));const c=[];[['c','colour'],['tel','phone'],['addr','address'],['link','link']].forEach(([k,l])=>{if((y[k]||'')!==(n[k]||''))c.push(l)});[['bg','blood group'],['dd','passed away'],['ph','photo']].forEach(([k,l])=>{if(JSON.stringify(y[k]||[])!==JSON.stringify(n[k]||[]))c.push(l)});if(c.length)o.push('✏️ '+lab(n)+': '+c.join(', ')+' changed')}});
@@ -2170,13 +2145,12 @@
     function refreshDirty() {
       let L = []; try {L = JSON.parse(LIVEJ)} catch (x) { }
       dirtyB = BR.filter(b => L[b] && DATA[b] && JSON.stringify(DATA[b]) !== JSON.stringify(L[b]));
-      const dr = {}; dirtyB.forEach(b => dr[b] = DATA[b]); if (GH.user) {S('draft:' + GH.user.toLowerCase(), dirtyB.length ? JSON.stringify(dr) : null); S('loose:' + GH.user.toLowerCase(), LOOSE.length ? JSON.stringify(LOOSE) : null); S('root-order:' + GH.user.toLowerCase(), role === 'admin' && META.some((f,i) => f !== LIVEFILES[i]) ? JSON.stringify(META) : null)} setRole()
+      const dr = {}; dirtyB.forEach(b => dr[b] = DATA[b]); if (GH.user) {S('draft:' + GH.user.toLowerCase(), dirtyB.length ? JSON.stringify(dr) : null); S('loose:' + GH.user.toLowerCase(), LOOSE.length ? JSON.stringify(LOOSE) : null)} setRole()
     }
     function loadDrafts() {
       dirtyB=[]; LOOSE=[]; undoStack=[];
       if(GH.user&&BR.length){
         const key=GH.user.toLowerCase();
-        try{const draftFiles=JSON.parse(S('root-order:'+key)||'null');if(role==='admin'&&Array.isArray(draftFiles)&&draftFiles.length===META.length&&draftFiles.every(f=>META.includes(f))&&new Set(draftFiles).size===META.length){const roots=new Map(META.map((f,i)=>[f,DATA[i]]));META=draftFiles;DATA=draftFiles.map(f=>roots.get(f))}}catch(x){}
         try{const dr=JSON.parse(S('draft:'+key)||'{}');Object.keys(dr).forEach(b=>{if(BR.includes(+b)&&DATA[+b])DATA[+b]=dr[b]})}catch(x){}
         try{const loose=JSON.parse(S('loose:'+key)||'[]');LOOSE=Array.isArray(loose)?loose.filter(x=>x&&Number.isInteger(x.branch)&&BR.includes(x.branch)&&x.node&&x.node.id&&Array.isArray(x.node.kids)):[]}catch(x){}
         reindex();refreshDirty()
@@ -2187,7 +2161,7 @@
       const ok = role === 'admin' || role === 'editor';
       $('in').style.display = ME ? 'none' : 'inline-flex';
       $('out').style.display = ME ? 'inline-flex' : 'none';
-      $('loose-add').style.display = ok && ed ? '' : 'none'; $('sub').style.display = ok && !LOOSE.length && (unsentB().length || (role === 'admin' && META.some((f,i) => f !== LIVEFILES[i]))) ? '' : 'none'; $('undo').style.display = ok && ed && undoStack.length ? '' : 'none'; $('undo').disabled = !undoStack.length; $('dis').style.display = ok && (dirtyB.length || LOOSE.length || (role === 'admin' && META.some((f,i) => f !== LIVEFILES[i]))) ? '' : 'none'
+      $('loose-add').style.display = ok && ed ? '' : 'none'; $('sub').style.display = ok && !LOOSE.length && unsentB().length ? '' : 'none'; $('undo').style.display = ok && ed && undoStack.length ? '' : 'none'; $('undo').disabled = !undoStack.length; $('dis').style.display = ok && (dirtyB.length || LOOSE.length) ? '' : 'none'
     }
     function save() {const now=historyState();if(undoState&&now!==undoState){undoStack.push(undoState);if(undoStack.length>50)undoStack.shift()}undoState=now;refreshDirty();st(LOOSE.length?'Attach or remove floating slots before saving changes.':'Draft kept on this device — tap “Submit changes” to send it as a pull request')}
     function apply() { }
@@ -2210,11 +2184,9 @@
       })
     }
     /* ---- send changes as a pull request ---- */
-    // Keep the legacy GitHub export deliberately allowlisted: never copy private contacts,
-    // blood groups, or photo metadata into a pull request. Preserve the added spouse branch.
-    const branchJson = b => {const person=n=>({id:n.id,names:n.names,c:n.c,kids:(n.kids||[]).map(person)}),root=DATA[b];return JSON.stringify({id:root.id,names:root.names,kids:(root.kids||[]).map(person),spouseBranches:(root.spouseBranches||[]).map(sp=>({name:sp.name,kids:(sp.kids||[]).map(person)}))},null,2)+'\n'};
+    const branchJson = b => JSON.stringify({id: DATA[b].id, names: DATA[b].names, kids: DATA[b].kids}, null, 2) + '\n';
     const b64 = s => btoa(unescape(encodeURIComponent(s)));
-    function newPhotos(bs) {const o = {}; bs.forEach(b => {const f=n=>{(n.ph||[]).forEach(p=>{if(p&&NEWPH[p])o[p]=NEWPH[p]});n.kids.forEach(f)};f(DATA[b]);(DATA[b].spouseBranches||[]).forEach(sp=>(sp.kids||[]).forEach(f))});return o}
+    function newPhotos(bs) {const o = {}; bs.forEach(b => (function f(n) {(n.ph || []).forEach(p => {if (p && NEWPH[p]) o[p] = NEWPH[p]}); n.kids.forEach(f)})(DATA[b])); return o}
     async function createPR(bs, note) {
       const repo = REPO(), L = JSON.parse(LIVEJ), ph = newPhotos(bs);
       const base = (await ghApi('/repos/' + repo + '/git/ref/heads/main')).object.sha, name = 'edit/' + GH.user.toLowerCase() + '-' + Date.now().toString(36);
@@ -2241,8 +2213,8 @@
         const go = m.querySelector('#go'); if (go) go.onclick = async () => {go.disabled = true; go.textContent = 'Creating…'; try {const pr = await createPR(bs, m.querySelector('#nt').value.slice(0, 500)); bs.forEach(b => {SENT[b] = hash(JSON.stringify(DATA[b]))}); setRole(); m.innerHTML = '<h3>✅ Pull request created</h3><div class="m">The admin will review it. You will get a GitHub email when it is merged or closed.</div><a class="btn" target="_blank" rel="noopener" href="' + E(pr.html_url) + '">Open the pull request</a>'} catch (x) {go.disabled = false; go.textContent = 'Create pull request'; m.querySelector('#gm').textContent = 'Could not create it (' + (x.message || 'error').slice(0, 120) + '). You can use the manual steps below.'} }
       })
     };
-    $('undo').onclick = () => {if (!undoStack.length) return; const selected = sel && sel.id,prev=JSON.parse(undoStack.pop()); DATA=prev.tree; META=prev.files||META; LOOSE=prev.loose||[]; cur=Number.isInteger(prev.current)?prev.current:cur; currentSpouse=Number.isInteger(prev.spouse)?prev.spouse:0; undoState=historyState(); reindex(); refreshDirty(); render(); if(selected&&P.has(selected))show(P.get(selected).n);else{sel=null;hide()} setRole(); st('Undid the most recent change')};
-    $('dis').onclick = () => {DATA=JSON.parse(LIVEJ);META=LIVEFILES.slice();dirtyB.forEach(b=>delete SENT[b]);dirtyB=[];LOOSE=[];undoStack=[];undoState=historyState();if(GH.user){S('draft:'+GH.user.toLowerCase(),null);S('loose:'+GH.user.toLowerCase(),null);S('root-order:'+GH.user.toLowerCase(),null)}for(const id of UPLOADED)fetch('/api/photos?id='+encodeURIComponent(id),{method:'DELETE',credentials:'same-origin'}).catch(()=>{});UPLOADED.clear();reindex();cur=Math.min(cur,Math.max(0,DATA.length-1));currentSpouse=0;sel=null;hide();render();setRole();st('Back to the published version')};
+    $('undo').onclick = () => {if (!undoStack.length) return; const selected = sel && sel.id,prev=JSON.parse(undoStack.pop()); DATA=prev.tree; LOOSE=prev.loose||[]; cur=Number.isInteger(prev.current)?prev.current:cur; undoState=historyState(); reindex(); refreshDirty(); render(); if(selected&&P.has(selected))show(P.get(selected).n);else{sel=null;hide()} setRole(); st('Undid the most recent change')};
+    $('dis').onclick = () => {const L = JSON.parse(LIVEJ); dirtyB.forEach(b => {DATA[b] = L[b]; delete SENT[b]}); dirtyB = []; LOOSE = []; undoStack = []; undoState = historyState(); if (GH.user) {S('draft:' + GH.user.toLowerCase(), null); S('loose:' + GH.user.toLowerCase(), null)} for (const id of UPLOADED) fetch('/api/photos?id=' + encodeURIComponent(id), {method:'DELETE',credentials:'same-origin'}).catch(() => {}); UPLOADED.clear(); reindex(); sel = null; hide(); render(); setRole(); st('Back to the published version')};
 
 
     /* ---- GitHub Pages prototype login ---- */
@@ -2299,14 +2271,14 @@
         let a = await loadAccess(); PUBLIC = !!(a && a.mode === 'public'); NOCONTACT = PUBLIC && a.allowContact !== true; document.body.classList.toggle('nocontact', NOCONTACT);
         if (!PUBLIC) {await whoami(); if (ME && !a) a = await loadAccess()}
         const d = await fetch('/api/tree', {cache: 'no-store', credentials: 'same-origin'}).then(r => {if (!r.ok) throw new Error('data ' + r.status); return r.json()});
-        ACCESS = a; META = d.files.slice(); LIVEFILES=d.files.slice(); LIVEJ = JSON.stringify(d.tree); DATA = JSON.parse(LIVEJ); reindex(); DATA.forEach(r => {r.kids.forEach(k => open.add(k.id));(r.spouseBranches||[]).forEach(u=>u.kids.forEach(k=>open.add(k.id)))}); loaded = true;
+        ACCESS = a; META = d.files; LIVEJ = JSON.stringify(d.tree); DATA = JSON.parse(LIVEJ); reindex(); DATA.forEach(r => r.kids.forEach(k => open.add(k.id))); loaded = true;
         resolveRole(); loadDrafts(); render(); enter(); place(); setRole()
       }
       catch (e) {$('tree').innerHTML = '<div class="m" style="padding:30px 6px">Could not load the family data (' + E(e.message) + ').</div>'}
     })();
   </script>
   <script id="direct-save">
-(function(){if(window.__directSaveD1)return;window.__directSaveD1=true;const toast=t=>{let e=document.getElementById('ds-toast');if(!e){e=document.createElement('div');e.id='ds-toast';e.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99;background:#1f2937;color:white;padding:12px 18px;border-radius:12px';document.body.appendChild(e)}e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',5000)};const oldRole=setRole;setRole=function(){oldRole.apply(this,arguments);try{$('sub').textContent='💾 Save changes'}catch(e){}};$('sub').onclick=async function(){const bs=unsentB();if(!bs.length)return;const btn=$('sub');btn.disabled=true;btn.textContent='⏳ Saving…';try{const r=await fetch('/api/tree',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:META,tree:DATA})});const out=await r.json().catch(()=>({}));if(!r.ok)throw new Error(out.error||('Save failed ('+r.status+')'));META=out.files.slice();LIVEFILES=out.files.slice();LIVEJ=JSON.stringify(out.tree);DATA=JSON.parse(LIVEJ);reindex();dirtyB=[];const keep=new Set();const collectPhotos=n=>{(n.ph||[]).forEach(id=>{if(id)keep.add(id)});(n.kids||[]).forEach(collectPhotos);(n.spouseBranches||[]).forEach(u=>(u.kids||[]).forEach(collectPhotos))};DATA.forEach(collectPhotos);for(const id of UPLOADED)if(!keep.has(id))fetch(`/api/photos?id=${encodeURIComponent(id)}`,{method:"DELETE",credentials:"same-origin"}).catch(()=>{});UPLOADED.clear();bs.forEach(b=>SENT[b]=hash(JSON.stringify(DATA[b])));if(GH.user){S('draft:'+GH.user.toLowerCase(),null);S('root-order:'+GH.user.toLowerCase(),null)}render();setRole();toast('✅ Saved. Everyone will see the updates.');st('Saved to shared family database')}catch(e){modal('<h3>Could not save</h3><div class="warn">'+E(e.message||'Please try again.')+'</div><button id="retry">Try again</button>',m=>m.querySelector('#retry').onclick=()=>{$('modal').style.display='none';$('sub').onclick()})}finally{btn.disabled=false;setRole()}}})();
+(function(){if(window.__directSaveD1)return;window.__directSaveD1=true;const toast=t=>{let e=document.getElementById('ds-toast');if(!e){e=document.createElement('div');e.id='ds-toast';e.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99;background:#1f2937;color:white;padding:12px 18px;border-radius:12px';document.body.appendChild(e)}e.textContent=t;e.style.display='block';setTimeout(()=>e.style.display='none',5000)};const oldRole=setRole;setRole=function(){oldRole.apply(this,arguments);try{$('sub').textContent='💾 Save changes'}catch(e){}};$('sub').onclick=async function(){const bs=unsentB();if(!bs.length)return;const btn=$('sub');btn.disabled=true;btn.textContent='⏳ Saving…';try{const r=await fetch('/api/tree',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:META,tree:DATA})});const out=await r.json().catch(()=>({}));if(!r.ok)throw new Error(out.error||('Save failed ('+r.status+')'));LIVEJ=JSON.stringify(out.tree);DATA=JSON.parse(LIVEJ);reindex();dirtyB=[];const keep=new Set();const collectPhotos=n=>{(n.ph||[]).forEach(id=>{if(id)keep.add(id)});(n.kids||[]).forEach(collectPhotos)};DATA.forEach(collectPhotos);for(const id of UPLOADED)if(!keep.has(id))fetch(`/api/photos?id=${encodeURIComponent(id)}`,{method:"DELETE",credentials:"same-origin"}).catch(()=>{});UPLOADED.clear();bs.forEach(b=>SENT[b]=hash(JSON.stringify(DATA[b])));if(GH.user)S('draft:'+GH.user.toLowerCase(),null);render();setRole();toast('✅ Saved. Everyone will see the updates.');st('Saved to shared family database')}catch(e){modal('<h3>Could not save</h3><div class="warn">'+E(e.message||'Please try again.')+'</div><button id="retry">Try again</button>',m=>m.querySelector('#retry').onclick=()=>{$('modal').style.display='none';$('sub').onclick()})}finally{btn.disabled=false;setRole()}}})();
 </script>
 <a href="privacy.html" style="position:fixed;left:10px;bottom:6px;z-index:20;color:#d6bd89;font:12px system-ui,sans-serif;text-decoration:underline">Privacy</a>
 </body>
