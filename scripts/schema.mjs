@@ -2,7 +2,7 @@
 export const COLORS = ['blue','green','orange','purple','teal','pink','yellow'];
 export const BLOOD = ['','A+','A−','B+','B−','AB+','AB−','O+','O−'];
 const ID = /^[A-Za-z0-9_-]{1,24}$/, PHOTO = /^p[a-z0-9]{3,24}$/, CTRL = /[\u0000-\u001f\u007f]/;
-const NODE_KEYS = new Set(['id','names','c','kids','bg','dd','ph','link','tel','addr']);
+const NODE_KEYS = new Set(['id','names','c','kids','bg','dd','ph','link','tel','addr','spouseBranches']);
 
 export function checkBranch(root, where, errs, ids, photoExists) {
   const e = (m) => errs.push(`${where}: ${m}`);
@@ -23,6 +23,9 @@ export function checkBranch(root, where, errs, ids, photoExists) {
     if (!Array.isArray(n.names) || n.names.length < 1 || n.names.length > 6 || n.names.some(s => typeof s !== 'string' || !s.trim().length || s.length > 80 || CTRL.test(s))) e(`${path}: names must be 1-6 strings (max 80 chars)`);
     if (!COLORS.includes(n.c)) e(`${path}: unknown colour "${n.c}"`);
     if (!Array.isArray(n.kids)) e(`${path}: kids must be a list`);
+    // Public-data sanitization in earlier deployments added empty arrays to every node.
+    // Accept those old drafts, but allow actual spouse branches only on family roots.
+    if (n.spouseBranches !== undefined && (!Array.isArray(n.spouseBranches) || n.spouseBranches.length)) e(`${path}: spouse branches can only be defined on top-level families`);
     if (n.bg !== undefined && (!Array.isArray(n.bg) || n.bg.length > 6 || n.bg.some(x => !BLOOD.includes(x)))) e(`${path}: bad blood group`);
     if (n.dd !== undefined && (!Array.isArray(n.dd) || n.dd.length > 6 || n.dd.some(x => x !== null && (typeof x !== 'string' || x.length > 24)))) e(`${path}: bad passed-away entry`);
     if (n.ph !== undefined) {
