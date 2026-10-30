@@ -7,8 +7,9 @@ const NODE_KEYS = new Set(['id','names','c','kids','bg','dd','ph','link','tel','
 export function checkBranch(root, where, errs, ids, photoExists) {
   const e = (m) => errs.push(`${where}: ${m}`);
   if (!root || typeof root !== 'object' || Array.isArray(root)) return e('must be a JSON object');
-  const extra = Object.keys(root).filter(k => !['id','names','kids'].includes(k));
+  const extra = Object.keys(root).filter(k => !['id','names','kids','spouseBranches','c'].includes(k));
   if (extra.length) e(`unknown root field(s): ${extra.join(', ')}`);
+  if (root.c !== undefined && root.c !== 'root') e('root colour must be "root"');
   if (typeof root.id !== 'string' || !ID.test(root.id)) e('root id is missing or invalid');
   if (!Array.isArray(root.names) || root.names.length < 1 || root.names.length > 2 || root.names.some(s => typeof s !== 'string' || !s.length || s.length > 80 || CTRL.test(s))) e('root names must be 1-2 short strings');
   if (!Array.isArray(root.kids)) return e('root kids must be a list');
@@ -37,6 +38,17 @@ export function checkBranch(root, where, errs, ids, photoExists) {
     }
   };
   root.kids.forEach((k, i) => walk(k, `${(root.names && root.names[0]) || 'root'} › ${(k && Array.isArray(k.names) && k.names[0]) || i}`, 1));
+  if (root.spouseBranches !== undefined) {
+    if (!Array.isArray(root.spouseBranches) || root.spouseBranches.length > 1) e('root spouseBranches must contain at most one additional spouse (two spouses total)');
+    else root.spouseBranches.forEach((branch, i) => {
+      if (!branch || typeof branch !== 'object' || Array.isArray(branch)) { e(`spouse branch ${i + 2} must be an object`); return; }
+      const fields = Object.keys(branch).filter(k => !['name','kids'].includes(k));
+      if (fields.length) e(`spouse branch ${i + 2} has unknown field(s): ${fields.join(', ')}`);
+      if (typeof branch.name !== 'string' || !branch.name.trim() || branch.name.length > 80 || CTRL.test(branch.name)) e(`spouse branch ${i + 2} needs a short name`);
+      if (!Array.isArray(branch.kids)) e(`spouse branch ${i + 2} kids must be a list`);
+      else branch.kids.forEach((k, j) => walk(k, `${(root.names && root.names[0]) || 'root'} › ${branch.name || 'spouse'} › ${(k && Array.isArray(k.names) && k.names[0]) || j}`, 1));
+    });
+  }
 }
 
 // ---- human-readable comparison ------------------------------------------------
