@@ -28,7 +28,7 @@ function photoState(tree) {
 }
 async function handleGet(ctx) {
   const user = await sessionUser(ctx.request, ctx.env);
-  if (!user) { if(ctx.env.FAMILY_DB){const row=await ctx.env.FAMILY_DB.prepare('SELECT payload FROM family_tree WHERE id=1').first();if(row){try{const d=JSON.parse(row.payload),strip=n=>{const {tel,addr,bg,...rest}=n,out={...rest,kids:(n.kids||[]).map(strip)};if(Array.isArray(n.spouseBranches))out.spouseBranches=n.spouseBranches.map(branch=>({...branch,kids:(branch.kids||[]).map(strip)}));return out};return json({...d,tree:d.tree.map(strip)});}catch{}}} const r=await ctx.env.ASSETS.fetch(new Request(new URL('/data.public.json',ctx.request.url))); return r.ok?new Response(r.body,r):json({error:'Public tree unavailable.'},500); }
+  if (!user) { if(ctx.env.FAMILY_DB){const row=await ctx.env.FAMILY_DB.prepare('SELECT payload FROM family_tree WHERE id=1').first();if(row){try{const d=JSON.parse(row.payload),strip=n=>{const {tel,addr,bg,...rest}=n;return {...rest,kids:(n.kids||[]).map(strip),spouseBranches:(n.spouseBranches||[]).map(branch=>({...branch,kids:(branch.kids||[]).map(strip)}))}};return json({...d,tree:d.tree.map(strip)});}catch{}}} const r=await ctx.env.ASSETS.fetch(new Request(new URL('/data.public.json',ctx.request.url))); return r.ok?new Response(r.body,r):json({error:'Public tree unavailable.'},500); }
   if (!ctx.env.FAMILY_DB) return json({error:'Database is not configured. Follow SETUP-DIRECT-SAVE.md.'},503);
   let row = await ctx.env.FAMILY_DB.prepare('SELECT payload FROM family_tree WHERE id=1').first();
   if (!row) {
